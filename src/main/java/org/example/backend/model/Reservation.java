@@ -29,8 +29,8 @@ public class Reservation {
     private Long userId; // This will link to your user entity when you implement it
 
     @ManyToOne
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
+    @JoinColumn(name = "screening_id", nullable = false)
+    private Screening screening;
 
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
     private List<SeatReservation> seatReservations;

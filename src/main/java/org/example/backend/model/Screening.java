@@ -14,14 +14,14 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "session")
-public class Session {
+@Table(name = "screening")
+public class Screening {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "session_date", nullable = false)
+    @Column(name = "screening_date", nullable = false)
     private LocalDate date;
 
     @Column(name = "start_time", nullable = false)
@@ -38,9 +38,9 @@ public class Session {
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
-    @OneToMany(mappedBy = "session")
+    @OneToMany(mappedBy = "screening")
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "session")
+    @OneToMany(mappedBy = "screening")
     private List<SeatReservation> seatReservations;
 }

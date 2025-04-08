@@ -38,5 +38,5 @@ public class Movie {
     private String imageUrl;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    private List<Session> sessions;
+    private List<Screening> screenings;
 }

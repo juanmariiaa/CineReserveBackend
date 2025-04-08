@@ -31,5 +31,5 @@ public class Room {
     private List<Seat> seats;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<Session> sessions;
+    private List<Screening> screenings;
 }
