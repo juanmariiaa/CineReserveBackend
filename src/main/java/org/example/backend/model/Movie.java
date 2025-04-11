@@ -26,10 +26,8 @@ public class Movie {
     @Column(columnDefinition = "TEXT")
     private String synopsis;
 
-    private String genre;
 
-    @Column(name = "age_rating")
-    private String ageRating;
+    private String genre;
 
     @Column(name = "tmdb_id")
     private Integer tmdbId;

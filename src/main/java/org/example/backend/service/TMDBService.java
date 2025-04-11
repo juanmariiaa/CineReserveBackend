@@ -1,10 +1,10 @@
 package org.example.backend.service;
 
 import org.example.backend.dto.MovieDetails;
+import org.example.backend.dto.MovieSearchResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 
 
 @Service
@@ -27,4 +27,17 @@ public class TMDBService {
                 .bodyToMono(MovieDetails.class)
                 .block();
     }
+
+    public MovieSearchResponse searchMoviesByName(String query) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/search/movie")
+                        .queryParam("query", query)
+                        .build())
+                .retrieve()
+                .bodyToMono(MovieSearchResponse.class)
+                .block();
+    }
+
+
 }
