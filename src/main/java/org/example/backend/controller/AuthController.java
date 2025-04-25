@@ -53,25 +53,47 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            System.out.println("SIGNIN - Usuario: " + loginRequest.getUsername());
+            System.out.println("SIGNIN - Contraseña: " + loginRequest.getPassword());
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            // Crear la autenticación
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+            // Autenticar usando nuestro proveedor personalizado
+            Authentication authenticated = simpleAuthProvider.authenticate(authToken);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+            // Establecer la autenticación en el contexto
+            SecurityContextHolder.getContext().setAuthentication(authenticated);
+            String jwt = jwtUtils.generateJwtToken(authenticated);
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles));
+            List<String> roles = authenticated.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+
+            // Buscar el usuario para obtener más datos
+            User user = userRepository.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
+
+            System.out.println("SIGNIN - Autenticación exitosa, JWT generado");
+
+            return ResponseEntity.ok(Map.of(
+                    "token", jwt,
+                    "id", user.getId(),
+                    "username", user.getUsername(),
+                    "email", user.getEmail(),
+                    "roles", roles
+            ));
+        } catch (Exception e) {
+            System.out.println("SIGNIN - Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "message", "Error de autenticación: " + e.getMessage()
+            ));
+        }
     }
-
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
