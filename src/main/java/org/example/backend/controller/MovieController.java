@@ -5,6 +5,7 @@ import org.example.backend.dto.MovieSearchResponse;
 import org.example.backend.model.Movie;
 import org.example.backend.service.MovieService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class MovieController {
     private final MovieService movieService;
 
     @PostMapping("/tmdb/{tmdbId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Movie> createMovieFromTMDB(@PathVariable Integer tmdbId) {
         Movie movie = movieService.createMovieFromTMDB(tmdbId);
         return ResponseEntity.ok(movie);
@@ -27,15 +29,42 @@ public class MovieController {
         return ResponseEntity.ok(movieService.getMovieById(id));
     }
 
+    @GetMapping
+    public ResponseEntity<List<Movie>> getAllActiveMovies() {
+        return ResponseEntity.ok(movieService.getAllActiveMovies());
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<MovieSearchResponse.MovieResult>> searchMovies(@RequestParam String name) {
         List<MovieSearchResponse.MovieResult> results = movieService.findMoviesByName(name);
         return ResponseEntity.ok(results);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Movie> deleteMovie(@PathVariable Long id) {
-        Movie movie = movieService.deleteMovieById(id);
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @RequestBody Movie movieDetails) {
+        Movie updatedMovie = movieService.updateMovie(id, movieDetails);
+        return ResponseEntity.ok(updatedMovie);
+    }
+
+    @PutMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Movie> deactivateMovie(@PathVariable Long id) {
+        Movie movie = movieService.deactivateMovie(id);
         return ResponseEntity.ok(movie);
+    }
+
+    @PutMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Movie> activateMovie(@PathVariable Long id) {
+        Movie movie = movieService.activateMovie(id);
+        return ResponseEntity.ok(movie);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+        movieService.deleteMovie(id);
+        return ResponseEntity.noContent().build();
     }
 }

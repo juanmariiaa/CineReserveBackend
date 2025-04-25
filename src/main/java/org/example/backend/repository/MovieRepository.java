@@ -8,6 +8,20 @@ import java.util.List;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-    List<Movie> findByTitleContainingIgnoreCase(String title);
-    List<Movie> findByGenre(String genre);
+
+    /**
+     * Find all movies where isActive is true
+     *
+     * @return List of active movies
+     */
+    List<Movie> findByIsActiveTrue();
+
+    /**
+     * Optional: Additional useful methods you might want
+     */
+    List<Movie> findByTitleContainingIgnoreCaseAndIsActiveTrue(String title);
+
+    List<Movie> findTop10ByIsActiveTrueOrderByReleaseDateDesc();
+
+    List<Movie> findByTmdbId(Integer tmdbId);
 }
