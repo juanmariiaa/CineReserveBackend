@@ -23,12 +23,13 @@ public class Reservation {
     private LocalDateTime reservationDate;
 
     @Column(nullable = false)
-    private String status; // confirmed, cancelled, etc.
+    private String status;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // This will link to your user entity when you implement it
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
     private Screening screening;
 
