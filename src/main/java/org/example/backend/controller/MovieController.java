@@ -2,12 +2,15 @@ package org.example.backend.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.MovieSearchResponse;
+import org.example.backend.exception.MovieAlreadyExistsException;
 import org.example.backend.model.Movie;
 import org.example.backend.service.MovieService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -19,9 +22,15 @@ public class MovieController {
 
     @PostMapping("/tmdb/{tmdbId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Movie> createMovieFromTMDB(@PathVariable Integer tmdbId) {
-        Movie movie = movieService.createMovieFromTMDB(tmdbId);
-        return ResponseEntity.ok(movie);
+    public ResponseEntity<?> createMovieFromTMDB(@PathVariable Integer tmdbId) {
+        try {
+            Movie movie = movieService.createMovieFromTMDB(tmdbId);
+            return ResponseEntity.ok(movie);
+        } catch (MovieAlreadyExistsException e) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Movie already exists", "message", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
