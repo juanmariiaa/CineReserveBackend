@@ -1,5 +1,7 @@
 package org.example.backend.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.MovieDetails;
 import org.example.backend.dto.MovieSearchResponse;
@@ -7,6 +9,11 @@ import org.example.backend.model.Genre;
 import org.example.backend.model.Movie;
 import org.example.backend.repository.GenreRepository;
 import org.example.backend.repository.MovieRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,17 +25,34 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MovieService {
 
+    @Autowired
+    private EntityManager entityManager;
+
+    // Y agregar también un logger
+    private static final Logger log = LoggerFactory.getLogger(MovieService.class);
+
     private final MovieRepository movieRepository;
     private final TMDBService tmdbService;
     private final GenreRepository genreRepository;
 
+    @Transactional
     public Movie createMovieFromTMDB(Integer tmdbId) {
+        // Verificar si la película ya existe en la base de datos
+        if (movieRepository.existsByTmdbId(tmdbId)) {
+            log.info("La película con tmdbId {} ya existe en la base de datos", tmdbId);
+            Movie existingMovie = movieRepository.findByTmdbId(tmdbId)
+                    .orElseThrow(() -> new RuntimeException("No se pudo encontrar la película existente"));
+
+            return existingMovie;
+        }
+
+        // Si no existe, obtener detalles de TMDB
         MovieDetails details = tmdbService.getMovieDetails(tmdbId);
         Movie movie = new Movie();
 
+        // Configuración básica de la película
         movie.setTmdbId(tmdbId);
         movie.setTitle(details.getTitle());
-        // Update these method calls to match the new field names in MovieDetails
         movie.setDurationMinutes(details.getDurationMinutes());
         movie.setDescription(details.getDescription());
         movie.setReleaseDate(details.getReleaseDate());
@@ -40,8 +64,18 @@ public class MovieService {
         movie.setTrailerUrl(getTrailerUrl(details));
         movie.setIsActive(true);
 
+        // Establecer el rating basado en vote_average
+        // Usando una clasificación simple basada en el puntaje de TMDB
+        if (details.getVoteAverage() != null) {
+            if (details.getVoteAverage() >= 8.0) {
+                movie.setRating("PG-13"); // Ejemplo - ajustar según criterios reales
+            } else if (details.getVoteAverage() >= 6.5) {
+                movie.setRating("PG");
+            } else {
+                movie.setRating("G");
+            }
+        }
 
-        // Set poster and backdrop URLs - update to use the new field names
         if (details.getPosterUrl() != null) {
             movie.setPosterUrl("https://image.tmdb.org/t/p/w500" + details.getPosterUrl());
         }
@@ -49,28 +83,49 @@ public class MovieService {
             movie.setBackdropUrl("https://image.tmdb.org/t/p/original" + details.getBackdropPath());
         }
 
-        // Set creation timestamps
         LocalDateTime now = LocalDateTime.now();
         movie.setCreatedAt(now);
         movie.setUpdatedAt(now);
 
-        // Add genres
-        Set<Genre> genres = new HashSet<>();
+        // Obtener el usuario actual y establecer el addedBy
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            movie.setAddedBy(username);
+        }
+
+        // Primero guardamos la película sin géneros
+        Movie savedMovie = movieRepository.save(movie);
+
+        // Procesamos los géneros
         if (details.getGenres() != null) {
             for (MovieDetails.Genre genreDto : details.getGenres()) {
-                Genre genre = genreRepository.findByTmdbGenreId(genreDto.getId())
-                        .orElseGet(() -> {
-                            Genre newGenre = new Genre();
-                            newGenre.setName(genreDto.getName());
-                            newGenre.setTmdbGenreId(genreDto.getId());
-                            return genreRepository.save(newGenre);
-                        });
-                genres.add(genre);
-            }
-        }
-        movie.setGenres(genres);
+                try {
+                    Genre genre = genreRepository.findByTmdbGenreId(genreDto.getId())
+                            .orElseGet(() -> {
+                                Genre newGenre = new Genre();
+                                newGenre.setName(genreDto.getName());
+                                newGenre.setTmdbGenreId(genreDto.getId());
+                                return genreRepository.save(newGenre);
+                            });
 
-        return movieRepository.save(movie);
+                    // Desconectar el género de su sesión anterior
+                    entityManager.detach(genre);
+                    genre = genreRepository.findById(genre.getId()).orElse(genre);
+
+                    // Añadir género a la película sin manipular la relación bidireccional
+                    savedMovie.getGenres().add(genre);
+
+                } catch (Exception e) {
+                    log.error("Error al procesar el género {}: {}", genreDto.getName(), e.getMessage());
+                }
+            }
+
+            // Guardar la película con todos los géneros
+            savedMovie = movieRepository.save(savedMovie);
+        }
+
+        return savedMovie;
     }
 
     private String getTrailerUrl(MovieDetails details) {

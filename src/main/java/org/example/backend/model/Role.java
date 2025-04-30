@@ -11,16 +11,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(name = "roles")
 public class Role {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
-    private ERole name;
+    @Column(length = 20, unique = true) // Asegúrate de que sea único
+    private String name;
 
-    // Eliminamos la referencia bidireccional que causa el ciclo
-    // @ManyToMany(mappedBy = "roles")
-    // private Set<User> users;
+    // Define las constantes para roles
+    public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
 }

@@ -1,8 +1,9 @@
 package org.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -10,12 +11,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-@Data
-@Entity
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@Entity
 @Table(name = "movie")
 public class Movie {
 
@@ -75,18 +77,32 @@ public class Movie {
     private LocalDateTime updatedAt;
 
     @Column(name = "added_by")
-    private Long addedBy;
+    private String addedBy;
 
-    @ManyToMany
+    @JsonManagedReference
+    @ManyToMany(cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "movie_genre",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     private Set<Genre> genres = new HashSet<>();
-
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
     private List<Screening> screenings;
+
+    public void addGenre(Genre genre) {
+        if (genre != null) {
+            this.genres.add(genre);
+            genre.getMovies().add(this);
+        }
+    }
+
+    public void removeGenre(Genre genre) {
+        if (genre != null) {
+            this.genres.remove(genre);
+            genre.getMovies().remove(this);
+        }
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -97,5 +113,30 @@ public class Movie {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Implementación personalizada de equals y hashCode que excluye colecciones
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Movie movie = (Movie) o;
+        return Objects.equals(id, movie.id) &&
+                Objects.equals(title, movie.title) &&
+                Objects.equals(tmdbId, movie.tmdbId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, tmdbId);
+    }
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", tmdbId=" + tmdbId +
+                '}';
     }
 }

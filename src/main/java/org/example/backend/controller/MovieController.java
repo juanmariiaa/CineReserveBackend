@@ -5,6 +5,7 @@ import org.example.backend.dto.MovieSearchResponse;
 import org.example.backend.model.Movie;
 import org.example.backend.service.MovieService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class MovieController {
     private final MovieService movieService;
 
     @PostMapping("/tmdb/{tmdbId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Movie> createMovieFromTMDB(@PathVariable Integer tmdbId) {
         Movie movie = movieService.createMovieFromTMDB(tmdbId);
         return ResponseEntity.ok(movie);
