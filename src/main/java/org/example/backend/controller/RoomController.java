@@ -1,5 +1,6 @@
 package org.example.backend.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.RoomDTO;
 import org.example.backend.model.Room;
@@ -19,7 +20,7 @@ public class RoomController {
     private final RoomService roomService;
 
     @PostMapping
-    public ResponseEntity<Room> createRoom(@RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<Room> createRoom(@Valid @RequestBody RoomDTO roomDTO) {
         Room createdRoom = roomService.createFromDTO(roomDTO);
         return ResponseEntity.ok(createdRoom);
     }

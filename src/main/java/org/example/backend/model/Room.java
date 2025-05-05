@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -34,9 +35,9 @@ public class Room {
     @Column(nullable = false)
     private Integer capacity;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("room")
-    private List<Seat> seats;
+    private List<Seat> seats = new ArrayList<>();
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("room")
@@ -46,5 +47,45 @@ public class Room {
     @PreUpdate
     private void calculateCapacity() {
         this.capacity = this.rows * this.columns;
+    }
+
+    /**
+     * Genera asientos para esta sala de forma simétrica.
+     * Las filas se etiquetan desde 'A' hasta 'Z' y luego 'AA', 'AB', etc.
+     * Las columnas son numéricas comenzando desde 1.
+     */
+    public void generateSeats() {
+        // Limpia asientos existentes si los hubiera
+        if (seats == null) {
+            seats = new ArrayList<>();
+        } else {
+            seats.clear();
+        }
+
+        // Genera nuevos asientos
+        for (int r = 0; r < rows; r++) {
+            String rowLabel = generateRowLabel(r);
+            for (int c = 0; c < columns; c++) {
+                seats.add(new Seat(rowLabel, c + 1, this));
+            }
+        }
+    }
+
+    /**
+     * Genera una etiqueta de fila alfabética basada en el índice
+     * (A, B, C, ..., Z, AA, AB, ...)
+     */
+    private String generateRowLabel(int rowIndex) {
+        StringBuilder result = new StringBuilder();
+
+        // Para índices mayores a 25 (después de 'Z')
+        if (rowIndex > 25) {
+            int firstChar = rowIndex / 26 - 1;
+            result.append((char)('A' + firstChar));
+            rowIndex %= 26;
+        }
+
+        result.append((char)('A' + rowIndex));
+        return result.toString();
     }
 }

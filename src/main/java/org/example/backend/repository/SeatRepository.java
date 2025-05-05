@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     List<Seat> findByRoom(Room room);
-    List<Seat> findByRoomAndRow(Room room, String row);
+    List<Seat> findByRoomAndRowLabel(Room room, String rowLabel);
 }

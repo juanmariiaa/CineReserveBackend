@@ -25,10 +25,9 @@ public class SeatService {
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
     }
 
-    public List<Seat> findByRoom(Room room) {
-        return seatRepository.findByRoom(room);
+    public List<Seat> findByRoomAndRowLabel(Room room, String rowLabel) {
+        return seatRepository.findByRoomAndRowLabel(room, rowLabel);
     }
-
     public List<Seat> findAll() {
         return seatRepository.findAll();
     }

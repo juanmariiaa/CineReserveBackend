@@ -1,8 +1,6 @@
 package org.example.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "seat")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Seat {
 
     @Id
@@ -23,10 +20,10 @@ public class Seat {
     private Long id;
 
     @Column(nullable = false)
-    private String row;
+    private String rowLabel;  // Cambiado de "row" a "rowLabel" para evitar confusión con palabras reservadas SQL
 
     @Column(nullable = false)
-    private Integer number;
+    private Integer columnNumber;  // Cambiado de "number" a "columnNumber" para mayor claridad
 
     @ManyToOne
     @JoinColumn(name = "room_id")
@@ -35,4 +32,11 @@ public class Seat {
 
     @OneToMany(mappedBy = "seat")
     private List<SeatReservation> seatReservations;
+
+    // Constructor útil para crear asientos fácilmente
+    public Seat(String rowLabel, Integer columnNumber, Room room) {
+        this.rowLabel = rowLabel;
+        this.columnNumber = columnNumber;
+        this.room = room;
+    }
 }

@@ -22,23 +22,21 @@ public class RoomService {
         if (room.getNumber() == null) {
             room.setNumber(generateNextRoomNumber());
         }
+
+        if (room.getId() == null) {
+            room.generateSeats();
+        }
+
         return roomRepository.save(room);
     }
 
-    /**
-     * Genera el siguiente número de sala basado en el máximo actual + 1
-     * @return el siguiente número de sala disponible
-     */
+
     private Integer generateNextRoomNumber() {
         Optional<Integer> maxRoomNumber = roomRepository.findMaxRoomNumber();
         return maxRoomNumber.map(integer -> integer + 1).orElse(1); // Si no hay salas, empezar desde 1
     }
 
-    /**
-     * Crea una sala a partir de un DTO
-     * @param roomDTO datos de la sala a crear
-     * @return la sala creada
-     */
+
     public Room createFromDTO(RoomDTO roomDTO) {
         Room room = new Room();
         // No establecer el número, se generará automáticamente
@@ -61,10 +59,7 @@ public class RoomService {
         return roomRepository.findByNumber(number);
     }
 
-    /**
-     * Elimina la sala con el número más grande
-     * @return la sala eliminada
-     */
+
     public Room deleteRoomWithHighestNumber() {
         Optional<Room> roomToDelete = roomRepository.findRoomWithHighestNumber();
         if (roomToDelete.isPresent()) {
@@ -76,10 +71,7 @@ public class RoomService {
         }
     }
 
-    /**
-     * Método existente para eliminar por ID
-     * Podría mantenerse para compatibilidad o eliminarse si no es necesario
-     */
+
     public void delete(Long id) {
         roomRepository.deleteById(id);
     }
