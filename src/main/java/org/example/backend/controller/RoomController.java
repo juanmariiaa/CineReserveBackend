@@ -1,6 +1,7 @@
 package org.example.backend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend.dto.RoomDTO;
 import org.example.backend.model.Room;
 import org.example.backend.service.RoomService;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,8 @@ public class RoomController {
     private final RoomService roomService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Room> createRoom(@RequestBody Room room) {
-        Room createdRoom = roomService.save(room);
+    public ResponseEntity<Room> createRoom(@RequestBody RoomDTO roomDTO) {
+        Room createdRoom = roomService.createFromDTO(roomDTO);
         return ResponseEntity.ok(createdRoom);
     }
 
@@ -40,6 +40,13 @@ public class RoomController {
     public ResponseEntity<Room> getRoomByNumber(@PathVariable Integer number) {
         Room room = roomService.findByNumber(number);
         return ResponseEntity.ok(room);
+    }
+
+    @DeleteMapping("/delete-highest")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Room> deleteRoomWithHighestNumber() {
+        Room deletedRoom = roomService.deleteRoomWithHighestNumber();
+        return ResponseEntity.ok(deletedRoom);
     }
 
     @DeleteMapping("/{id}")

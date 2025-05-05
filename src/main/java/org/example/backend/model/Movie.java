@@ -1,5 +1,6 @@
 package org.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -87,8 +88,11 @@ public class Movie {
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     private Set<Genre> genres = new HashSet<>();
+
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    private List<Screening> screenings;
+    @JsonIgnoreProperties("movie")
+    private Set<Screening> screenings;
 
     public void addGenre(Genre genre) {
         if (genre != null) {

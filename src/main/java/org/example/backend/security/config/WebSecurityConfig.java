@@ -23,7 +23,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -73,6 +72,7 @@ public class WebSecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/movies/{id}").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/movies").permitAll()
+                                .requestMatchers("/api/rooms/**").permitAll() // AÑADIR ESTA LÍNEA
                                 .anyRequest().authenticated()
                 );
 
@@ -94,4 +94,6 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+
 }

@@ -1,6 +1,8 @@
 package org.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,11 +36,13 @@ public class Screening {
     private BigDecimal price;
 
     @ManyToOne
-    @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room_id")
+    @JsonIgnoreProperties("screenings")
     private Room room;
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
+    @JsonIgnoreProperties("screenings")
     private Movie movie;
 
     @OneToMany(mappedBy = "screening")
