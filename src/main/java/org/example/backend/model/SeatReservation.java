@@ -23,8 +23,4 @@ public class SeatReservation {
     @ManyToOne
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
-
-    @ManyToOne
-    @JoinColumn(name = "screening_id", nullable = false)
-    private Screening screening;
 }

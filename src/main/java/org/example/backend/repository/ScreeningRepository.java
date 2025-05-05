@@ -1,18 +1,49 @@
 package org.example.backend.repository;
 
-import org.example.backend.model.Movie;
-import org.example.backend.model.Room;
 import org.example.backend.model.Screening;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface ScreeningRepository extends JpaRepository<Screening, Long> {
-    List<Screening> findByMovie(Movie movie);
-    List<Screening> findByRoom(Room room);
-    List<Screening> findByDate(LocalDate date);
-    List<Screening> findByDateAndMovie(LocalDate date, Movie movie);
+
+    /**
+     * Busca proyecciones que se solapan con el período especificado
+     */
+    @Query("SELECT s FROM Screening s WHERE s.room.id = :roomId AND " +
+            "((s.startTime < :endTime AND s.endTime > :startTime))")
+    List<Screening> findOverlappingScreenings(
+            @Param("roomId") Long roomId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * Busca la siguiente proyección después de un momento dado
+     */
+    @Query("SELECT s FROM Screening s WHERE s.room.id = :roomId AND " +
+            "s.startTime > :afterTime ORDER BY s.startTime ASC")
+    List<Screening> findNextScreeningsAfter(
+            @Param("roomId") Long roomId,
+            @Param("afterTime") LocalDateTime afterTime);
+
+    /**
+     * Encuentra todas las proyecciones activas (actuales o futuras)
+     */
+    @Query("SELECT s FROM Screening s WHERE s.endTime > :now ORDER BY s.startTime")
+    List<Screening> findActiveScreenings(@Param("now") LocalDateTime now);
+
+    /**
+     * Encuentra proyecciones por película en un período específico
+     */
+    @Query("SELECT s FROM Screening s WHERE s.movie.id = :movieId AND " +
+            "s.startTime BETWEEN :fromDate AND :toDate ORDER BY s.startTime")
+    List<Screening> findByMovieIdAndDateRange(
+            @Param("movieId") Long movieId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate);
 }

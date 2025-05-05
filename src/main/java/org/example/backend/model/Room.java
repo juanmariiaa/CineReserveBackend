@@ -49,11 +49,7 @@ public class Room {
         this.capacity = this.rows * this.columns;
     }
 
-    /**
-     * Genera asientos para esta sala de forma simétrica.
-     * Las filas se etiquetan desde 'A' hasta 'Z' y luego 'AA', 'AB', etc.
-     * Las columnas son numéricas comenzando desde 1.
-     */
+
     public void generateSeats() {
         // Limpia asientos existentes si los hubiera
         if (seats == null) {
@@ -71,10 +67,7 @@ public class Room {
         }
     }
 
-    /**
-     * Genera una etiqueta de fila alfabética basada en el índice
-     * (A, B, C, ..., Z, AA, AB, ...)
-     */
+
     private String generateRowLabel(int rowIndex) {
         StringBuilder result = new StringBuilder();
 

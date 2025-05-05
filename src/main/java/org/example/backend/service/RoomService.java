@@ -2,7 +2,7 @@ package org.example.backend.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.backend.dto.RoomDTO;
+import org.example.backend.dto.RoomCreationDTO;
 import org.example.backend.model.Room;
 import org.example.backend.repository.RoomRepository;
 import org.springframework.stereotype.Service;
@@ -37,11 +37,11 @@ public class RoomService {
     }
 
 
-    public Room createFromDTO(RoomDTO roomDTO) {
+    public Room createFromDTO(RoomCreationDTO roomCreationDTO) {
         Room room = new Room();
         // No establecer el número, se generará automáticamente
-        room.setRows(roomDTO.getRows());
-        room.setColumns(roomDTO.getColumns());
+        room.setRows(roomCreationDTO.getRows());
+        room.setColumns(roomCreationDTO.getColumns());
         // Guardar la sala y se generará el número automáticamente
         return save(room);
     }

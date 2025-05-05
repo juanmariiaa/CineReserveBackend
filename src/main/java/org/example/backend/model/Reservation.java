@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.backend.model.enums.ReservationStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -22,8 +24,9 @@ public class Reservation {
     @Column(name = "reservation_date", nullable = false)
     private LocalDateTime reservationDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ReservationStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -33,6 +36,21 @@ public class Reservation {
     @JoinColumn(name = "screening_id", nullable = false)
     private Screening screening;
 
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
-    private List<SeatReservation> seatReservations;
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SeatReservation> seatReservations = new ArrayList<>();
+
+    // Método helper para añadir asientos a la reserva
+    public void addSeatReservation(Seat seat) {
+        SeatReservation seatReservation = new SeatReservation();
+        seatReservation.setReservation(this);
+        seatReservation.setSeat(seat);
+        this.seatReservations.add(seatReservation);
+    }
+
+    // Método helper para remover asientos de la reserva
+    public void removeSeatReservation(SeatReservation seatReservation) {
+        this.seatReservations.remove(seatReservation);
+        seatReservation.setReservation(null);
+        seatReservation.setSeat(null);
+    }
 }

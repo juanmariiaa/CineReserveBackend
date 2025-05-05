@@ -1,17 +1,13 @@
 package org.example.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -19,35 +15,70 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "screening")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Screening {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "screening_date", nullable = false)
-    private LocalDate date;
-
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
-
-    @Column(nullable = false)
-    private BigDecimal price;
-
-    @ManyToOne
-    @JoinColumn(name = "room_id")
-    @JsonIgnoreProperties("screenings")
-    private Room room;
-
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
     @JsonIgnoreProperties("screenings")
     private Movie movie;
 
-    @OneToMany(mappedBy = "screening")
-    private List<Reservation> reservations;
+    @ManyToOne
+    @JoinColumn(name = "room_id", nullable = false)
+    @JsonIgnoreProperties("screenings")
+    private Room room;
 
-    @OneToMany(mappedBy = "screening")
-    private List<SeatReservation> seatReservations;
+    @Column(nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(nullable = false)
+    private LocalDateTime endTime;
+
+    @Column(nullable = false)
+    private Double ticketPrice = 8.0;  // Precio predeterminado
+
+    @Column
+    private Boolean is3D = false;
+
+    @Column
+    private Boolean hasSubtitles = false;
+
+    @Column(length = 50)
+    private String language = "Español";
+
+    @Column(length = 50)
+    private String format = "Digital";
+
+    @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("screening")
+    private List<Reservation> reservations = new ArrayList<>();
+
+    @Transient
+    public boolean isActive() {
+        return LocalDateTime.now().isBefore(endTime);
+    }
+
+    @Transient
+    public boolean hasStarted() {
+        return LocalDateTime.now().isAfter(startTime);
+    }
+
+    @Transient
+    public int getAvailableSeats() {
+        if (room == null) return 0;
+
+        int totalSeats = room.getCapacity();
+        int reservedSeats = 0;
+
+        if (reservations != null) {
+            for (Reservation reservation : reservations) {
+                reservedSeats += reservation.getSeatReservations().size();
+            }
+        }
+
+        return totalSeats - reservedSeats;
+    }
 }

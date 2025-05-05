@@ -46,19 +46,14 @@ public class MovieController {
 
     @GetMapping("/search")
     public ResponseEntity<List<MovieSearchResponse.MovieResult>> searchMovies(@RequestParam String name) {
-        log.info("Searching for movies with name: {}", name);
 
         if (name == null || name.trim().isEmpty()) {
-            log.warn("Empty search query provided");
             return ResponseEntity.ok(Collections.emptyList());
         }
-
         try {
             List<MovieSearchResponse.MovieResult> results = movieService.findMoviesByName(name);
-            log.info("Found {} results for query: {}", results != null ? results.size() : 0, name);
             return ResponseEntity.ok(results != null ? results : Collections.emptyList());
         } catch (Exception e) {
-            log.error("Error searching for movies: {}", e.getMessage(), e);
             return ResponseEntity.ok(Collections.emptyList()); // Return empty list instead of error
         }
     }
