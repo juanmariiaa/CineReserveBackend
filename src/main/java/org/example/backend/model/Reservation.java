@@ -39,7 +39,6 @@ public class Reservation {
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SeatReservation> seatReservations = new ArrayList<>();
 
-    // Método helper para añadir asientos a la reserva
     public void addSeatReservation(Seat seat) {
         SeatReservation seatReservation = new SeatReservation();
         seatReservation.setReservation(this);
@@ -47,7 +46,6 @@ public class Reservation {
         this.seatReservations.add(seatReservation);
     }
 
-    // Método helper para remover asientos de la reserva
     public void removeSeatReservation(SeatReservation seatReservation) {
         this.seatReservations.remove(seatReservation);
         seatReservation.setReservation(null);

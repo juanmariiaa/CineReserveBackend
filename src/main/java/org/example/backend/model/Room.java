@@ -51,14 +51,12 @@ public class Room {
 
 
     public void generateSeats() {
-        // Limpia asientos existentes si los hubiera
         if (seats == null) {
             seats = new ArrayList<>();
         } else {
             seats.clear();
         }
 
-        // Genera nuevos asientos
         for (int r = 0; r < rows; r++) {
             String rowLabel = generateRowLabel(r);
             for (int c = 0; c < columns; c++) {
@@ -71,7 +69,6 @@ public class Room {
     private String generateRowLabel(int rowIndex) {
         StringBuilder result = new StringBuilder();
 
-        // Para índices mayores a 25 (después de 'Z')
         if (rowIndex > 25) {
             int firstChar = rowIndex / 26 - 1;
             result.append((char)('A' + firstChar));

@@ -15,7 +15,7 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 20, unique = true) // Asegúrate de que sea único
+    @Column(length = 20, unique = true)
     private String name;
 
     // Define las constantes para roles
