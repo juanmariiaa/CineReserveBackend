@@ -18,7 +18,6 @@ public class Role {
     @Column(length = 20, unique = true)
     private String name;
 
-    // Define las constantes para roles
     public static final String ROLE_USER = "ROLE_USER";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
 }

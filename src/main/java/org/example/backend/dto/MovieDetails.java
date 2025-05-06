@@ -46,14 +46,12 @@ public class MovieDetails {
     @JsonProperty("videos")
     private Videos videos;
 
-    // Clase interna para representar el género
     @Data
     public static class Genre {
         private Integer id;
         private String name;
     }
 
-    // Clase interna para representar los videos (trailers, etc.)
     @Data
     public static class Videos {
         private List<Video> results;

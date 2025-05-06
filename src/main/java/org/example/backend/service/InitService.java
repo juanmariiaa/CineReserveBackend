@@ -18,7 +18,6 @@ public class InitService {
 
     @PostConstruct
     public void init() {
-        // Inicializar roles si no existen
         if (roleRepository.findByName(Role.ROLE_USER).isEmpty()) {
             Role userRole = new Role();
             userRole.setName(Role.ROLE_USER);

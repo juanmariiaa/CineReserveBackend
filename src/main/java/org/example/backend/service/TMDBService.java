@@ -121,7 +121,6 @@ public class TMDBService {
             log.error("Error searching movies: {} - {}", e.getStatusCode(), e.getMessage());
             log.error("Response body: {}", e.getResponseBodyAsString());
 
-            // Return an empty response object instead of throwing
             MovieSearchResponse emptyResponse = new MovieSearchResponse();
             emptyResponse.setPage(1);
             emptyResponse.setResults(Collections.emptyList());
@@ -131,7 +130,6 @@ public class TMDBService {
         } catch (Exception e) {
             log.error("Unexpected error searching movies: {}", e.getMessage(), e);
 
-            // Return an empty response object
             MovieSearchResponse emptyResponse = new MovieSearchResponse();
             emptyResponse.setPage(1);
             emptyResponse.setResults(Collections.emptyList());

@@ -34,7 +34,6 @@ public class Seat {
     @JsonIgnoreProperties({"seat"})
     private List<SeatReservation> seatReservations;
 
-    // Constructor útil para crear asientos fácilmente
     public Seat(String rowLabel, Integer columnNumber, Room room) {
         this.rowLabel = rowLabel;
         this.columnNumber = columnNumber;

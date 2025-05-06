@@ -28,7 +28,7 @@ public class MovieService {
     @Autowired
     private EntityManager entityManager;
 
-    // Y agregar también un logger
+    // And also add a logger
     private static final Logger log = LoggerFactory.getLogger(MovieService.class);
 
     private final MovieRepository movieRepository;
@@ -37,20 +37,17 @@ public class MovieService {
 
     @Transactional
     public Movie createMovieFromTMDB(Integer tmdbId) {
-        // Verificar si la película ya existe en la base de datos
         if (movieRepository.existsByTmdbId(tmdbId)) {
-            log.info("La película con tmdbId {} ya existe en la base de datos", tmdbId);
+            log.info("Movie with tmdbId {} already exists in the database", tmdbId);
             Movie existingMovie = movieRepository.findByTmdbId(tmdbId)
-                    .orElseThrow(() -> new RuntimeException("No se pudo encontrar la película existente"));
+                    .orElseThrow(() -> new RuntimeException("Could not find existing movie"));
 
             return existingMovie;
         }
 
-        // Si no existe, obtener detalles de TMDB
         MovieDetails details = tmdbService.getMovieDetails(tmdbId);
         Movie movie = new Movie();
 
-        // Configuración básica de la película
         movie.setTmdbId(tmdbId);
         movie.setTitle(details.getTitle());
         movie.setDurationMinutes(details.getDurationMinutes());
@@ -112,7 +109,7 @@ public class MovieService {
                     savedMovie.getGenres().add(genre);
 
                 } catch (Exception e) {
-                    log.error("Error al procesar el género {}: {}", genreDto.getName(), e.getMessage());
+                    log.error("Error processing genre {}: {}", genreDto.getName(), e.getMessage());
                 }
             }
 

@@ -119,7 +119,6 @@ public class Movie {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Implementación personalizada de equals y hashCode que excluye colecciones
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

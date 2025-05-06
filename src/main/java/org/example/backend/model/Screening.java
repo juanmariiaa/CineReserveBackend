@@ -38,7 +38,7 @@ public class Screening {
     private LocalDateTime endTime;
 
     @Column(nullable = false)
-    private Double ticketPrice = 8.0;  // Precio predeterminado
+    private Double ticketPrice = 8.0;
 
     @Column
     private Boolean is3D = false;

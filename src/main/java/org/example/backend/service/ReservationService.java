@@ -28,13 +28,13 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationCreateDTO dto) {
         User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         Screening screening = screeningRepository.findById(dto.getScreeningId())
-                .orElseThrow(() -> new EntityNotFoundException("Proyección no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Screening not found"));
 
         if (!screening.isActive()) {
-            throw new BusinessException("La proyección ya no está disponible");
+            throw new BusinessException("The screening is no longer available");
         }
 
         Reservation reservation = new Reservation();
@@ -45,10 +45,10 @@ public class ReservationService {
 
         for (Long seatId : dto.getSeatIds()) {
             Seat seat = seatRepository.findById(seatId)
-                    .orElseThrow(() -> new EntityNotFoundException("Asiento no encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException("Seat not found"));
 
             if (isSeatAlreadyReserved(screening, seat)) {
-                throw new BusinessException("El asiento " + seat.getRowLabel() + seat.getColumnNumber() + " ya está reservado");
+                throw new BusinessException("The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
             }
 
             reservation.addSeatReservation(seat);
@@ -59,10 +59,10 @@ public class ReservationService {
 
     public void cancelReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
 
         if (reservation.getScreening().hasStarted()) {
-            throw new BusinessException("No se puede cancelar una reserva para una proyección que ya ha comenzado");
+            throw new BusinessException("Cannot cancel a reservation for a screening that has already started");
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
@@ -70,13 +70,13 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
-    // Método para cambiar asientos de una reserva existente
+    // Method to change seats of an existing reservation
     public Reservation modifySeats(Long reservationId, SeatModificationDTO dto) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
 
         if (reservation.getScreening().hasStarted()) {
-            throw new BusinessException("No se puede modificar una reserva para una proyección que ya ha comenzado");
+            throw new BusinessException("Cannot modify a reservation for a screening that has already started");
         }
 
         if (dto.getSeatIdsToRemove() != null && !dto.getSeatIdsToRemove().isEmpty()) {
@@ -92,10 +92,10 @@ public class ReservationService {
         if (dto.getSeatIdsToAdd() != null && !dto.getSeatIdsToAdd().isEmpty()) {
             for (Long seatId : dto.getSeatIdsToAdd()) {
                 Seat seat = seatRepository.findById(seatId)
-                        .orElseThrow(() -> new EntityNotFoundException("Asiento no encontrado"));
+                        .orElseThrow(() -> new EntityNotFoundException("Seat not found"));
 
                 if (isSeatAlreadyReserved(reservation.getScreening(), seat)) {
-                    throw new BusinessException("El asiento " + seat.getRowLabel() + seat.getColumnNumber() + " ya está reservado");
+                    throw new BusinessException("The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
                 }
 
                 reservation.addSeatReservation(seat);

@@ -9,22 +9,21 @@ import java.time.LocalDateTime;
 
 @Data
 public class ScreeningCreationDTO {
-    @NotNull(message = "El ID de la película es obligatorio")
+    @NotNull(message = "The movie ID is required")
     private Long movieId;
 
-    @NotNull(message = "El ID de la sala es obligatorio")
+    @NotNull(message = "The room ID is required")
     private Long roomId;
 
-    @NotNull(message = "La fecha y hora de inicio es obligatoria")
-    @Future(message = "La fecha de proyección debe ser en el futuro")
+    @NotNull(message = "The start date and time is required")
+    @Future(message = "The screening date must be in the future")
     private LocalDateTime startTime;
 
-    @Min(value = 0, message = "El precio no puede ser negativo")
+    @Min(value = 0, message = "The price cannot be negative")
     private Double ticketPrice;
 
-    // Campos adicionales que podrían ser útiles
     private Boolean is3D = false;
     private Boolean hasSubtitles = false;
-    private String language = "Español"; // Idioma por defecto
-    private String format = "Digital"; // Formato por defecto
+    private String language = "English";
+    private String format = "Digital";
 }

@@ -39,7 +39,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            // Solo procesa el token si no es nulo y parece ser un token válido
             if (jwt != null) {
                 try {
                     if (jwtUtils.validateJwtToken(jwt)) {
@@ -56,14 +55,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 } catch (Exception e) {
-                    // Registra el error pero continúa con la cadena de filtros
-                    logger.error("No se puede establecer la autenticación de usuario: {}", e.getMessage());
-                    // No re-lanzar la excepción para no interrumpir la cadena
+                    logger.error("Cannot set user authentication: {}", e.getMessage());
                 }
             }
         } catch (Exception e) {
-            logger.error("Error en el procesamiento del token JWT: {}", e.getMessage());
-            // No re-lanzar la excepción para permitir que la solicitud continúe
+            logger.error("Error processing JWT token: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

@@ -18,7 +18,6 @@ public class RoomService {
     private final RoomRepository roomRepository;
 
     public Room save(Room room) {
-        // Si el número de sala no está establecido, generarlo automáticamente
         if (room.getNumber() == null) {
             room.setNumber(generateNextRoomNumber());
         }
@@ -33,16 +32,14 @@ public class RoomService {
 
     private Integer generateNextRoomNumber() {
         Optional<Integer> maxRoomNumber = roomRepository.findMaxRoomNumber();
-        return maxRoomNumber.map(integer -> integer + 1).orElse(1); // Si no hay salas, empezar desde 1
+        return maxRoomNumber.map(integer -> integer + 1).orElse(1);
     }
 
 
     public Room createFromDTO(RoomCreationDTO roomCreationDTO) {
         Room room = new Room();
-        // No establecer el número, se generará automáticamente
         room.setRows(roomCreationDTO.getRows());
         room.setColumns(roomCreationDTO.getColumns());
-        // Guardar la sala y se generará el número automáticamente
         return save(room);
     }
 

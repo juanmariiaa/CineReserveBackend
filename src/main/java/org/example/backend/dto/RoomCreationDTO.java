@@ -6,10 +6,11 @@ import lombok.Data;
 
 @Data
 public class RoomCreationDTO {
-    @Min(value = 1, message = "Las filas deben ser al menos 1")
-    @Max(value = 50, message = "Las filas no pueden exceder 50")
+    @Min(value = 1, message = "Rows must be at least 1")
+    @Max(value = 50, message = "Rows cannot exceed 50")
     private Integer rows;
 
-    @Min(value = 1, message = "Las columnas deben ser al menos 1")
-    @Max(value = 50, message = "Las columnas no pueden exceder 50")
-    private Integer columns;}
+    @Min(value = 1, message = "Columns must be at least 1")
+    @Max(value = 50, message = "Columns cannot exceed 50")
+    private Integer columns;
+}

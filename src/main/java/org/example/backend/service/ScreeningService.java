@@ -28,22 +28,22 @@ public class ScreeningService {
 
     public Screening createScreening(ScreeningCreationDTO dto) {
         Movie movie = movieRepository.findById(dto.getMovieId())
-                .orElseThrow(() -> new ResourceNotFoundException("Película no encontrada con ID: " + dto.getMovieId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + dto.getMovieId()));
 
         Room room = roomRepository.findById(dto.getRoomId())
-                .orElseThrow(() -> new ResourceNotFoundException("Sala no encontrada con ID: " + dto.getRoomId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: " + dto.getRoomId()));
 
         LocalDateTime endTime = calculateEndTime(dto.getStartTime(), movie.getDurationMinutes());
 
         boolean isRoomAvailable = checkRoomAvailability(room, dto.getStartTime(), endTime);
         if (!isRoomAvailable) {
-            throw new RoomNotAvailableException("La sala no está disponible en el horario especificado");
+            throw new RoomNotAvailableException("The room is not available at the specified time");
         }
 
         LocalDateTime cleanupEndTime = endTime.plusMinutes(15);
 
         if (!checkCleanupTime(room, endTime, cleanupEndTime)) {
-            throw new RoomNotAvailableException("No hay tiempo suficiente para preparar la sala antes de la siguiente proyección");
+            throw new RoomNotAvailableException("There is not enough time to prepare the room before the next screening");
         }
 
         Screening screening = new Screening();
@@ -61,17 +61,12 @@ public class ScreeningService {
         return screeningRepository.save(screening);
     }
 
-    /**
-     * Calcula la hora de fin basada en la hora de inicio y la duración
-     */
+
     private LocalDateTime calculateEndTime(LocalDateTime startTime, Integer durationMinutes) {
-        // Añadir 15 minutos para anuncios y trailers
         return startTime.plusMinutes(durationMinutes + 15);
     }
 
-    /**
-     * Verifica si la sala está disponible en el horario especificado
-     */
+
     private boolean checkRoomAvailability(Room room, LocalDateTime startTime, LocalDateTime endTime) {
         List<Screening> overlappingScreenings = screeningRepository.findOverlappingScreenings(
                 room.getId(), startTime, endTime);
@@ -79,18 +74,14 @@ public class ScreeningService {
         return overlappingScreenings.isEmpty();
     }
 
-    /**
-     * Verifica si hay tiempo suficiente para la preparación entre proyecciones
-     */
     private boolean checkCleanupTime(Room room, LocalDateTime currentEndTime, LocalDateTime cleanupEndTime) {
         List<Screening> nextScreenings = screeningRepository.findNextScreeningsAfter(
                 room.getId(), currentEndTime);
 
         if (nextScreenings.isEmpty()) {
-            return true;  // No hay más proyecciones después
+            return true;
         }
 
-        // Comprobar si la primera proyección siguiente comienza después del tiempo de limpieza
         Screening nextScreening = nextScreenings.get(0);
         return nextScreening.getStartTime().isAfter(cleanupEndTime);
     }
