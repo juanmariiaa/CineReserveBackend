@@ -20,17 +20,18 @@ public class Seat {
     private Long id;
 
     @Column(nullable = false)
-    private String rowLabel;  // Cambiado de "row" a "rowLabel" para evitar confusión con palabras reservadas SQL
+    private String rowLabel;
 
     @Column(nullable = false)
-    private Integer columnNumber;  // Cambiado de "number" a "columnNumber" para mayor claridad
+    private Integer columnNumber;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
-    @JsonIgnoreProperties("seats")
+    @JsonIgnoreProperties({"seats", "screenings"})
     private Room room;
 
     @OneToMany(mappedBy = "seat")
+    @JsonIgnoreProperties({"seat"})
     private List<SeatReservation> seatReservations;
 
     // Constructor útil para crear asientos fácilmente

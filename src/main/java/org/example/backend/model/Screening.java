@@ -23,12 +23,12 @@ public class Screening {
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
-    @JsonIgnoreProperties("screenings")
+    @JsonIgnoreProperties({"screenings"})
     private Movie movie;
 
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
-    @JsonIgnoreProperties("screenings")
+    @JsonIgnoreProperties({"screenings", "seats"})
     private Room room;
 
     @Column(nullable = false)
@@ -53,7 +53,7 @@ public class Screening {
     private String format = "Digital";
 
     @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties("screening")
+    @JsonIgnoreProperties({"screening"})
     private List<Reservation> reservations = new ArrayList<>();
 
     @Transient
