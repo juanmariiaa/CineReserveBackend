@@ -81,6 +81,7 @@ public class Movie {
     private String addedBy;
 
     @JsonManagedReference
+    @JsonIgnoreProperties({"movies", "hibernateLazyInitializer", "handler"})
     @ManyToMany(cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "movie_genre",
@@ -91,7 +92,7 @@ public class Movie {
 
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties("movie")
+    @JsonIgnoreProperties({"movie", "reservations", "hibernateLazyInitializer", "handler"})
     private Set<Screening> screenings;
 
     public void addGenre(Genre genre) {

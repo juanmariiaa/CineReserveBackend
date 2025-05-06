@@ -23,12 +23,12 @@ public class Screening {
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
-    @JsonIgnoreProperties({"screenings"})
+    @JsonIgnoreProperties({"screenings", "hibernateLazyInitializer", "handler"})
     private Movie movie;
 
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
-    @JsonIgnoreProperties({"screenings", "seats"})
+    @JsonIgnoreProperties({"screenings", "seats", "hibernateLazyInitializer", "handler"})
     private Room room;
 
     @Column(nullable = false)

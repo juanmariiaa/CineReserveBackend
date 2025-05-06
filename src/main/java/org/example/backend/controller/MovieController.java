@@ -1,16 +1,19 @@
 package org.example.backend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend.dto.MovieDTO;
 import org.example.backend.dto.MovieSearchResponse;
 import org.example.backend.model.Movie;
 import org.example.backend.service.MovieService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -29,15 +32,21 @@ public class MovieController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Movie>> getAllMovies() {
+    public ResponseEntity<List<MovieDTO>> getAllMovies() {
         log.info("Fetching all movies from database");
         try {
             List<Movie> movies = movieService.getAllActiveMovies();
-            return ResponseEntity.ok(movies);
+            List<MovieDTO> movieDTOs = movies.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(movieDTOs);
         } catch (Exception e) {
-            return ResponseEntity.ok(Collections.emptyList());
+            log.error("Error fetching movies: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Movie> getMovie(@PathVariable Long id) {
@@ -57,4 +66,32 @@ public class MovieController {
             return ResponseEntity.ok(Collections.emptyList()); // Return empty list instead of error
         }
     }
+
+    private MovieDTO convertToDTO(Movie movie) {
+        MovieDTO dto = new MovieDTO();
+        dto.setId(movie.getId());
+        dto.setTitle(movie.getTitle());
+        dto.setDescription(movie.getDescription());
+        dto.setDurationMinutes(movie.getDurationMinutes());
+        dto.setReleaseDate(movie.getReleaseDate());
+        dto.setPosterUrl(movie.getPosterUrl());
+        dto.setBackdropUrl(movie.getBackdropUrl());
+        dto.setRating(movie.getRating());
+        dto.setLanguage(movie.getLanguage());
+        dto.setDirector(movie.getDirector());
+        dto.setTrailerUrl(movie.getTrailerUrl());
+        dto.setTmdbId(movie.getTmdbId());
+        dto.setImdbId(movie.getImdbId());
+        dto.setPopularity(movie.getPopularity());
+        dto.setVoteAverage(movie.getVoteAverage());
+        dto.setVoteCount(movie.getVoteCount());
+
+        // Solo extraemos los nombres de los géneros
+        if (movie.getGenres() != null) {
+            movie.getGenres().forEach(genre -> dto.getGenreNames().add(genre.getName()));
+        }
+
+        return dto;
+    }
+
 }

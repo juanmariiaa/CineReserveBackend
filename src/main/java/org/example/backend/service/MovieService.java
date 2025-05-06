@@ -131,6 +131,7 @@ public class MovieService {
     }
 
     public List<Movie> getAllActiveMovies() {
+        log.debug("Calling repository to get active movies");
         return movieRepository.findByIsActiveTrue();
     }
 
