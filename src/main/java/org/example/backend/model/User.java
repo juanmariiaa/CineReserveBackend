@@ -15,7 +15,7 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users") // Note: 'user' is a reserved keyword in some DBs
+@Table(name = "users")
 public class User {
 
     @Id

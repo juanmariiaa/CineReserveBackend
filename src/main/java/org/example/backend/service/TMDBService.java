@@ -1,5 +1,6 @@
 package org.example.backend.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.example.backend.dto.MovieSearchResponse;
 import org.example.backend.dto.MovieDetails;
 import org.slf4j.Logger;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class TMDBService {
@@ -43,6 +46,60 @@ public class TMDBService {
             throw new RuntimeException("Failed to fetch movie details from TMDB", e);
         }
     }
+
+    public String getDirectorName(Integer tmdbId) {
+        try {
+            log.info("Fetching credits for TMDB ID: {}", tmdbId);
+
+            return webClient.get()
+                    .uri("/movie/{id}/credits", tmdbId)
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .map(json -> {
+                        JsonNode crew = json.get("crew");
+                        if (crew != null && crew.isArray()) {
+                            for (JsonNode crewMember : crew) {
+                                if ("Director".equals(crewMember.get("job").asText())) {
+                                    return crewMember.get("name").asText();
+                                }
+                            }
+                        }
+                        return null;
+                    })
+                    .block();
+
+        } catch (Exception e) {
+            log.error("Error fetching director for movie {}: {}", tmdbId, e.getMessage());
+            return null;
+        }
+    }
+
+    public String getTrailerUrl(Integer tmdbId) {
+        try {
+            Map<String, Object> videos = webClient.get()
+                    .uri("/movie/{id}/videos", tmdbId)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (videos != null && videos.containsKey("results")) {
+                List<Map<String, Object>> results = (List<Map<String, Object>>) videos.get("results");
+                return results.stream()
+                        .filter(video ->
+                                "Trailer".equalsIgnoreCase((String) video.get("type")) &&
+                                        "YouTube".equalsIgnoreCase((String) video.get("site")) &&
+                                        "en".equalsIgnoreCase((String) video.get("iso_639_1")))
+                        .map(video -> "https://www.youtube.com/watch?v=" + video.get("key"))
+                        .findFirst()
+                        .orElse(null);
+            }
+        } catch (Exception e) {
+            log.error("Error fetching trailer: {}", e.getMessage());
+        }
+        return null;
+    }
+
+
 
     public MovieSearchResponse searchMoviesByName(String query) {
         try {
