@@ -112,4 +112,28 @@ public class ReservationService {
                                 !ReservationStatus.CANCELLED.equals(sr.getReservation().getStatus())
                 );
     }
+
+    public List<Reservation> getAllReservations() {
+        return reservationRepository.findAll();
+    }
+
+    public Reservation getReservationById(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found with ID: " + id));
+    }
+
+    public List<Reservation> getReservationsByUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User not found with ID: " + userId);
+        }
+
+        return reservationRepository.findByUserId(userId);
+    }
+
+    public List<Reservation> getReservationsByScreening(Long screeningId) {
+        Screening screening = screeningRepository.findById(screeningId)
+                .orElseThrow(() -> new EntityNotFoundException("Screening not found with ID: " + screeningId));
+
+        return reservationRepository.findByScreening(screening);
+    }
 }

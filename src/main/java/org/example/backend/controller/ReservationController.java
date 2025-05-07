@@ -6,16 +6,44 @@ import org.example.backend.dto.SeatModificationDTO;
 import org.example.backend.model.Reservation;
 import org.example.backend.service.ReservationService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ReservationController {
 
     private final ReservationService reservationService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Reservation>> getAllReservations() {
+        List<Reservation> reservations = reservationService.getAllReservations();
+        return ResponseEntity.ok(reservations);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
+        Reservation reservation = reservationService.getReservationById(id);
+        return ResponseEntity.ok(reservation);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Reservation>> getReservationsByUser(@PathVariable Long userId) {
+        List<Reservation> reservations = reservationService.getReservationsByUser(userId);
+        return ResponseEntity.ok(reservations);
+    }
+
+    @GetMapping("/screening/{screeningId}")
+    public ResponseEntity<List<Reservation>> getReservationsByScreening(@PathVariable Long screeningId) {
+        List<Reservation> reservations = reservationService.getReservationsByScreening(screeningId);
+        return ResponseEntity.ok(reservations);
+    }
 
     @PostMapping
     public ResponseEntity<Reservation> createReservation(@Valid @RequestBody ReservationCreateDTO dto) {

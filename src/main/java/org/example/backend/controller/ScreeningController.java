@@ -8,12 +8,15 @@ import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.exception.RoomNotAvailableException;
 import org.example.backend.model.Screening;
 import org.example.backend.service.ScreeningService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/screenings")
@@ -24,10 +27,57 @@ public class ScreeningController {
     private final ScreeningService screeningService;
 
 
+    @GetMapping
+    public ResponseEntity<List<Screening>> getAllScreenings() {
+        List<Screening> screenings = screeningService.getAllScreenings();
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Screening> getScreeningById(@PathVariable Long id) {
+        Screening screening = screeningService.getScreeningById(id);
+        return ResponseEntity.ok(screening);
+    }
+
     @PostMapping
     public ResponseEntity<Screening> createScreening(@Valid @RequestBody ScreeningCreationDTO dto) {
         Screening screening = screeningService.createScreening(dto);
         return ResponseEntity.ok(screening);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Screening> updateScreening(
+            @PathVariable Long id,
+            @Valid @RequestBody ScreeningCreationDTO dto) {
+        Screening screening = screeningService.updateScreening(id, dto);
+        return ResponseEntity.ok(screening);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteScreening(@PathVariable Long id) {
+        screeningService.deleteScreening(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/movie/{movieId}")
+    public ResponseEntity<List<Screening>> getScreeningsByMovie(@PathVariable Long movieId) {
+        List<Screening> screenings = screeningService.getScreeningsByMovie(movieId);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<List<Screening>> getScreeningsByRoom(@PathVariable Long roomId) {
+        List<Screening> screenings = screeningService.getScreeningsByRoom(roomId);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<Screening>> getScreeningsByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<Screening> screenings = screeningService.getScreeningsByDate(date);
+        return ResponseEntity.ok(screenings);
     }
 
 

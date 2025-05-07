@@ -45,11 +45,10 @@ public class RoomController {
 
     @DeleteMapping("/delete-highest")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Room> deleteRoomWithHighestNumber() {
-        Room deletedRoom = roomService.deleteRoomWithHighestNumber();
-        return ResponseEntity.ok(deletedRoom);
+    public ResponseEntity<Void> deleteRoomWithHighestNumber() {
+        roomService.deleteRoomWithHighestNumber();
+        return ResponseEntity.noContent().build();
     }
-
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {

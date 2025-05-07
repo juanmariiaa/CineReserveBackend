@@ -8,6 +8,7 @@ import org.example.backend.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -57,15 +58,10 @@ public class RoomService {
     }
 
 
-    public Room deleteRoomWithHighestNumber() {
-        Optional<Room> roomToDelete = roomRepository.findRoomWithHighestNumber();
-        if (roomToDelete.isPresent()) {
-            Room room = roomToDelete.get();
-            roomRepository.deleteById(room.getId());
-            return room;
-        } else {
-            throw new RuntimeException("No rooms available to delete");
-        }
+    public void deleteRoomWithHighestNumber() {
+        Room room = roomRepository.findRoomWithHighestNumber()
+                .orElseThrow(() -> new NoSuchElementException("No rooms found"));
+        roomRepository.delete(room);
     }
 
 
