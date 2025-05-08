@@ -178,6 +178,10 @@ public class ScreeningService {
                 .toList();
     }
 
+    public List<Screening> getScreeningsByTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
+        return screeningRepository.findByStartTimeBetweenOrderByStartTime(startTime, endTime);
+    }
+
     public ScreeningDateDTO getAvailableDatesForMovie(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));

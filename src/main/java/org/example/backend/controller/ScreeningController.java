@@ -3,6 +3,8 @@ package org.example.backend.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ScreeningCreationDTO;
+import org.example.backend.dto.ScreeningDateDTO;
+import org.example.backend.dto.ScreeningTimeDTO;
 import org.example.backend.exception.ErrorResponse;
 import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.exception.RoomNotAvailableException;
@@ -26,7 +28,6 @@ public class ScreeningController {
 
     private final ScreeningService screeningService;
 
-
     @GetMapping
     public ResponseEntity<List<Screening>> getAllScreenings() {
         List<Screening> screenings = screeningService.getAllScreenings();
@@ -40,6 +41,7 @@ public class ScreeningController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Screening> createScreening(@Valid @RequestBody ScreeningCreationDTO dto) {
         Screening screening = screeningService.createScreening(dto);
         return ResponseEntity.ok(screening);
@@ -67,6 +69,30 @@ public class ScreeningController {
         return ResponseEntity.ok(screenings);
     }
 
+    @GetMapping("/movie/{movieId}/dates")
+    public ResponseEntity<ScreeningDateDTO> getAvailableDatesForMovie(@PathVariable Long movieId) {
+        ScreeningDateDTO dateDTO = screeningService.getAvailableDatesForMovie(movieId);
+        return ResponseEntity.ok(dateDTO);
+    }
+
+    @GetMapping("/movie/{movieId}/date/{date}")
+    public ResponseEntity<ScreeningTimeDTO> getScreeningsByMovieAndDate(
+            @PathVariable Long movieId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        ScreeningTimeDTO timeDTO = screeningService.getScreeningsByMovieAndDate(movieId, date);
+        return ResponseEntity.ok(timeDTO);
+    }
+
+    @GetMapping("/movie/{movieId}/daterange")
+    public ResponseEntity<List<ScreeningTimeDTO>> getScreeningsByMovieForDateRange(
+            @PathVariable Long movieId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<ScreeningTimeDTO> timeDTOs = screeningService.getScreeningsByMovieForDateRange(movieId, startDate,
+                endDate);
+        return ResponseEntity.ok(timeDTOs);
+    }
+
     @GetMapping("/room/{roomId}")
     public ResponseEntity<List<Screening>> getScreeningsByRoom(@PathVariable Long roomId) {
         List<Screening> screenings = screeningService.getScreeningsByRoom(roomId);
@@ -80,6 +106,13 @@ public class ScreeningController {
         return ResponseEntity.ok(screenings);
     }
 
+    @GetMapping("/time-range")
+    public ResponseEntity<List<Screening>> getScreeningsByTimeRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
+        List<Screening> screenings = screeningService.getScreeningsByTimeRange(startTime, endTime);
+        return ResponseEntity.ok(screenings);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
@@ -87,8 +120,7 @@ public class ScreeningController {
                 HttpStatus.NOT_FOUND.value(),
                 "Recurso no encontrado",
                 ex.getMessage(),
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
@@ -98,8 +130,7 @@ public class ScreeningController {
                 HttpStatus.CONFLICT.value(),
                 "Conflicto de horarios",
                 ex.getMessage(),
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 }
