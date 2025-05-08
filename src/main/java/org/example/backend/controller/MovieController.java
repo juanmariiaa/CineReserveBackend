@@ -1,5 +1,7 @@
 package org.example.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.MovieDTO;
 import org.example.backend.dto.MovieSearchResponse;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/movies")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Movie", description = "Movie management APIs")
 public class MovieController {
     private static final Logger log = LoggerFactory.getLogger(MovieController.class);
 
@@ -26,12 +29,14 @@ public class MovieController {
 
     @PostMapping("/tmdb/{tmdbId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create movie from TMDB", description = "Creates a new movie by fetching data from TMDB API (Admin only)")
     public ResponseEntity<Movie> createMovieFromTMDB(@PathVariable Integer tmdbId) {
         Movie movie = movieService.createMovieFromTMDB(tmdbId);
         return ResponseEntity.ok(movie);
     }
 
     @GetMapping
+    @Operation(summary = "Get all movies", description = "Retrieves a list of all active movies")
     public ResponseEntity<List<MovieDTO>> getAllMovies() {
         log.info("Fetching all movies from database");
         try {
@@ -46,16 +51,15 @@ public class MovieController {
         }
     }
 
-
-
     @GetMapping("/{id}")
+    @Operation(summary = "Get movie by ID", description = "Retrieves a single movie by its ID")
     public ResponseEntity<Movie> getMovie(@PathVariable Long id) {
         return ResponseEntity.ok(movieService.getMovieById(id));
     }
 
     @GetMapping("/search")
+    @Operation(summary = "Search movies", description = "Searches for movies by name in TMDB database")
     public ResponseEntity<List<MovieSearchResponse.MovieResult>> searchMovies(@RequestParam String name) {
-
         if (name == null || name.trim().isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
@@ -69,6 +73,7 @@ public class MovieController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete a movie", description = "Deletes a movie by its ID (Admin only)")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
         log.info("Deleting movie with id: {}", id);
         try {
@@ -106,5 +111,4 @@ public class MovieController {
 
         return dto;
     }
-
 }

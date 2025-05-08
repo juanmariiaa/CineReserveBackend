@@ -65,16 +65,19 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Add this line
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/api/public/**").permitAll()
-                                // Also allow GET methods on these endpoints
-                                .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/movies/{id}").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/movies").permitAll()
-                                .requestMatchers("/api/rooms/**").permitAll() // AÑADIR ESTA LÍNEA
-                                .anyRequest().authenticated()
-                );
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        // Also allow GET methods on these endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies").permitAll()
+                        .requestMatchers("/api/rooms/**").permitAll() // AÑADIR ESTA LÍNEA
+                        // Swagger UI endpoints
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api-docs/**").permitAll()
+                        .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -85,7 +88,8 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Cambia esto por la URL exacta de tu frontend
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Cambia esto por la URL exacta de tu
+                                                                                 // frontend
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
         configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
@@ -94,6 +98,5 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 
 }

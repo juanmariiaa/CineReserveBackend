@@ -1,5 +1,7 @@
 package org.example.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ScreeningCreationDTO;
@@ -24,17 +26,20 @@ import java.util.List;
 @RequestMapping("/api/screenings")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Screening", description = "Screening management APIs")
 public class ScreeningController {
 
     private final ScreeningService screeningService;
 
     @GetMapping
+    @Operation(summary = "Get all screenings", description = "Retrieves a list of all screenings")
     public ResponseEntity<List<Screening>> getAllScreenings() {
         List<Screening> screenings = screeningService.getAllScreenings();
         return ResponseEntity.ok(screenings);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get screening by ID", description = "Retrieves a single screening by its ID")
     public ResponseEntity<Screening> getScreeningById(@PathVariable Long id) {
         Screening screening = screeningService.getScreeningById(id);
         return ResponseEntity.ok(screening);
@@ -42,6 +47,7 @@ public class ScreeningController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a screening", description = "Creates a new screening (Admin only)")
     public ResponseEntity<Screening> createScreening(@Valid @RequestBody ScreeningCreationDTO dto) {
         Screening screening = screeningService.createScreening(dto);
         return ResponseEntity.ok(screening);
@@ -49,6 +55,7 @@ public class ScreeningController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update a screening", description = "Updates an existing screening (Admin only)")
     public ResponseEntity<Screening> updateScreening(
             @PathVariable Long id,
             @Valid @RequestBody ScreeningCreationDTO dto) {
@@ -58,24 +65,28 @@ public class ScreeningController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete a screening", description = "Deletes a screening by its ID (Admin only)")
     public ResponseEntity<Void> deleteScreening(@PathVariable Long id) {
         screeningService.deleteScreening(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/movie/{movieId}")
+    @Operation(summary = "Get screenings by movie", description = "Retrieves all screenings for a specific movie")
     public ResponseEntity<List<Screening>> getScreeningsByMovie(@PathVariable Long movieId) {
         List<Screening> screenings = screeningService.getScreeningsByMovie(movieId);
         return ResponseEntity.ok(screenings);
     }
 
     @GetMapping("/movie/{movieId}/dates")
+    @Operation(summary = "Get available dates for a movie", description = "Retrieves all dates that have screenings for a movie")
     public ResponseEntity<ScreeningDateDTO> getAvailableDatesForMovie(@PathVariable Long movieId) {
         ScreeningDateDTO dateDTO = screeningService.getAvailableDatesForMovie(movieId);
         return ResponseEntity.ok(dateDTO);
     }
 
     @GetMapping("/movie/{movieId}/date/{date}")
+    @Operation(summary = "Get screenings by movie and date", description = "Retrieves all screenings for a movie on a specific date")
     public ResponseEntity<ScreeningTimeDTO> getScreeningsByMovieAndDate(
             @PathVariable Long movieId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -84,6 +95,7 @@ public class ScreeningController {
     }
 
     @GetMapping("/movie/{movieId}/daterange")
+    @Operation(summary = "Get screenings by movie and date range", description = "Retrieves all screenings for a movie within a date range")
     public ResponseEntity<List<ScreeningTimeDTO>> getScreeningsByMovieForDateRange(
             @PathVariable Long movieId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -94,12 +106,14 @@ public class ScreeningController {
     }
 
     @GetMapping("/room/{roomId}")
+    @Operation(summary = "Get screenings by room", description = "Retrieves all screenings for a specific room")
     public ResponseEntity<List<Screening>> getScreeningsByRoom(@PathVariable Long roomId) {
         List<Screening> screenings = screeningService.getScreeningsByRoom(roomId);
         return ResponseEntity.ok(screenings);
     }
 
     @GetMapping("/date/{date}")
+    @Operation(summary = "Get screenings by date", description = "Retrieves all screenings on a specific date")
     public ResponseEntity<List<Screening>> getScreeningsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<Screening> screenings = screeningService.getScreeningsByDate(date);
@@ -107,6 +121,7 @@ public class ScreeningController {
     }
 
     @GetMapping("/time-range")
+    @Operation(summary = "Get screenings by time range", description = "Retrieves all screenings within a specific time range")
     public ResponseEntity<List<Screening>> getScreeningsByTimeRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
