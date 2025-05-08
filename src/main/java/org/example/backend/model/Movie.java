@@ -47,6 +47,9 @@ public class Movie {
     @Column(length = 10)
     private String rating;
 
+    @Column(name = "age_rating", length = 10)
+    private String ageRating;
+
     private String language;
 
     private String director;
@@ -63,6 +66,9 @@ public class Movie {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
     private BigDecimal popularity;
 
     @Column(name = "vote_average")
@@ -70,6 +76,11 @@ public class Movie {
 
     @Column(name = "vote_count")
     private Integer voteCount;
+
+    @ElementCollection
+    @CollectionTable(name = "movie_tags", joinColumns = @JoinColumn(name = "movie_id"))
+    @Column(name = "tag")
+    private Set<String> tags = new HashSet<>();
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -81,18 +92,13 @@ public class Movie {
     private String addedBy;
 
     @JsonManagedReference
-    @JsonIgnoreProperties({"movies", "hibernateLazyInitializer", "handler"})
-    @ManyToMany(cascade = {CascadeType.MERGE})
-    @JoinTable(
-            name = "movie_genre",
-            joinColumns = @JoinColumn(name = "movie_id"),
-            inverseJoinColumns = @JoinColumn(name = "genre_id")
-    )
+    @JsonIgnoreProperties({ "movies", "hibernateLazyInitializer", "handler" })
+    @ManyToMany(cascade = { CascadeType.MERGE })
+    @JoinTable(name = "movie_genre", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
     private Set<Genre> genres = new HashSet<>();
 
-
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"movie", "reservations", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "movie", "reservations", "hibernateLazyInitializer", "handler" })
     private Set<Screening> screenings;
 
     public void addGenre(Genre genre) {
@@ -109,6 +115,18 @@ public class Movie {
         }
     }
 
+    public void addTag(String tag) {
+        if (tag != null && !tag.isEmpty()) {
+            this.tags.add(tag);
+        }
+    }
+
+    public void removeTag(String tag) {
+        if (tag != null) {
+            this.tags.remove(tag);
+        }
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -122,8 +140,10 @@ public class Movie {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Movie movie = (Movie) o;
         return Objects.equals(id, movie.id) &&
                 Objects.equals(title, movie.title) &&

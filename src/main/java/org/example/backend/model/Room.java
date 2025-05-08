@@ -49,7 +49,6 @@ public class Room {
         this.capacity = this.rows * this.columns;
     }
 
-
     public void generateSeats() {
         if (seats == null) {
             seats = new ArrayList<>();
@@ -65,17 +64,16 @@ public class Room {
         }
     }
 
-
     private String generateRowLabel(int rowIndex) {
         StringBuilder result = new StringBuilder();
 
         if (rowIndex > 25) {
             int firstChar = rowIndex / 26 - 1;
-            result.append((char)('A' + firstChar));
+            result.append((char) ('A' + firstChar));
             rowIndex %= 26;
         }
 
-        result.append((char)('A' + rowIndex));
+        result.append((char) ('A' + rowIndex));
         return result.toString();
     }
 }

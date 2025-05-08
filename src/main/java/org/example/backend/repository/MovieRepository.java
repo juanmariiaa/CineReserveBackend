@@ -15,4 +15,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     List<Movie> findByIsActiveTrue();
 
+    List<Movie> findByIsFeaturedTrue();
+
 }

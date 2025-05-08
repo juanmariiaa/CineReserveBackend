@@ -3,6 +3,9 @@ package org.example.backend.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ScreeningCreationDTO;
+import org.example.backend.dto.ScreeningDateDTO;
+import org.example.backend.dto.ScreeningTimeDTO;
+import org.example.backend.dto.ScreeningTimeDTO.ScreeningTimeSlot;
 import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.exception.RoomNotAvailableException;
 import org.example.backend.model.Movie;
@@ -16,7 +19,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +33,6 @@ public class ScreeningService {
     private final ScreeningRepository screeningRepository;
     private final MovieRepository movieRepository;
     private final RoomRepository roomRepository;
-
 
     public Screening createScreening(ScreeningCreationDTO dto) {
         Movie movie = movieRepository.findById(dto.getMovieId())
@@ -45,7 +51,8 @@ public class ScreeningService {
         LocalDateTime cleanupEndTime = endTime.plusMinutes(15);
 
         if (!checkCleanupTime(room, endTime, cleanupEndTime)) {
-            throw new RoomNotAvailableException("There is not enough time to prepare the room before the next screening");
+            throw new RoomNotAvailableException(
+                    "There is not enough time to prepare the room before the next screening");
         }
 
         Screening screening = new Screening();
@@ -63,11 +70,9 @@ public class ScreeningService {
         return screeningRepository.save(screening);
     }
 
-
     private LocalDateTime calculateEndTime(LocalDateTime startTime, Integer durationMinutes) {
         return startTime.plusMinutes(durationMinutes + 15);
     }
-
 
     private boolean checkRoomAvailability(Room room, LocalDateTime startTime, LocalDateTime endTime) {
         List<Screening> overlappingScreenings = screeningRepository.findOverlappingScreenings(
@@ -117,7 +122,8 @@ public class ScreeningService {
         LocalDateTime cleanupEndTime = endTime.plusMinutes(15);
 
         if (!checkCleanupTimeForUpdate(room, endTime, cleanupEndTime, id)) {
-            throw new RoomNotAvailableException("There is not enough time to prepare the room before the next screening");
+            throw new RoomNotAvailableException(
+                    "There is not enough time to prepare the room before the next screening");
         }
 
         screening.setMovie(movie);
@@ -145,8 +151,8 @@ public class ScreeningService {
             throw new ResourceNotFoundException("Movie not found with ID: " + movieId);
         }
         return screeningRepository.findByMovieIdAndDateRange(
-                movieId, 
-                LocalDateTime.now(), 
+                movieId,
+                LocalDateTime.now(),
                 LocalDateTime.now().plusMonths(3));
     }
 
@@ -167,13 +173,88 @@ public class ScreeningService {
 
         // Custom query to find screenings by date
         return screeningRepository.findAll().stream()
-                .filter(screening -> 
-                    screening.getStartTime().isAfter(startOfDay) && 
-                    screening.getStartTime().isBefore(endOfDay))
+                .filter(screening -> screening.getStartTime().isAfter(startOfDay) &&
+                        screening.getStartTime().isBefore(endOfDay))
                 .toList();
     }
 
-    private boolean checkRoomAvailabilityForUpdate(Room room, LocalDateTime startTime, LocalDateTime endTime, Long screeningId) {
+    public ScreeningDateDTO getAvailableDatesForMovie(Long movieId) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endDate = now.plusMonths(1); // Show screenings for the next month
+
+        List<Screening> screenings = screeningRepository.findByMovieIdAndDateRange(movieId, now, endDate);
+
+        // Extract unique dates with screenings and sort them
+        Set<LocalDate> availableDates = screenings.stream()
+                .map(screening -> screening.getStartTime().toLocalDate())
+                .collect(Collectors.toCollection(TreeSet::new)); // TreeSet keeps elements sorted
+
+        return new ScreeningDateDTO(movieId, movie.getTitle(), availableDates);
+    }
+
+    public ScreeningTimeDTO getScreeningsByMovieAndDate(Long movieId, LocalDate date) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        List<Screening> screenings = screeningRepository.findByMovieIdAndStartTimeBetween(movieId, startOfDay,
+                endOfDay);
+
+        List<ScreeningTimeSlot> timeSlots = screenings.stream()
+                .map(this::convertToTimeSlot)
+                .sorted(Comparator.comparing(ScreeningTimeSlot::getStartTime))
+                .collect(Collectors.toList());
+
+        return new ScreeningTimeDTO(movieId, movie.getTitle(), date, timeSlots);
+    }
+
+    public List<ScreeningTimeDTO> getScreeningsByMovieForDateRange(Long movieId, LocalDate startDate,
+            LocalDate endDate) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        List<Screening> screenings = screeningRepository.findByMovieIdAndDateRange(movieId, startDateTime, endDateTime);
+
+        // Group screenings by date
+        return screenings.stream()
+                .collect(Collectors.groupingBy(screening -> screening.getStartTime().toLocalDate()))
+                .entrySet().stream()
+                .map(entry -> {
+                    List<ScreeningTimeSlot> timeSlots = entry.getValue().stream()
+                            .map(this::convertToTimeSlot)
+                            .sorted(Comparator.comparing(ScreeningTimeSlot::getStartTime))
+                            .collect(Collectors.toList());
+
+                    return new ScreeningTimeDTO(movieId, movie.getTitle(), entry.getKey(), timeSlots);
+                })
+                .sorted(Comparator.comparing(ScreeningTimeDTO::getDate))
+                .collect(Collectors.toList());
+    }
+
+    private ScreeningTimeSlot convertToTimeSlot(Screening screening) {
+        ScreeningTimeSlot slot = new ScreeningTimeSlot();
+        slot.setScreeningId(screening.getId());
+        slot.setStartTime(screening.getStartTime().toLocalTime());
+        slot.setFormat(screening.getFormat());
+        slot.setIs3D(screening.getIs3D());
+        slot.setLanguage(screening.getLanguage());
+        slot.setHasSubtitles(screening.getHasSubtitles());
+        slot.setRoomNumber(screening.getRoom().getNumber());
+        slot.setAvailableSeats(screening.getAvailableSeats());
+        slot.setTicketPrice(screening.getTicketPrice());
+        return slot;
+    }
+
+    private boolean checkRoomAvailabilityForUpdate(Room room, LocalDateTime startTime, LocalDateTime endTime,
+            Long screeningId) {
         List<Screening> overlappingScreenings = screeningRepository.findOverlappingScreenings(
                 room.getId(), startTime, endTime);
 
@@ -182,7 +263,8 @@ public class ScreeningService {
                 .noneMatch(screening -> !screening.getId().equals(screeningId));
     }
 
-    private boolean checkCleanupTimeForUpdate(Room room, LocalDateTime currentEndTime, LocalDateTime cleanupEndTime, Long screeningId) {
+    private boolean checkCleanupTimeForUpdate(Room room, LocalDateTime currentEndTime, LocalDateTime cleanupEndTime,
+            Long screeningId) {
         List<Screening> nextScreenings = screeningRepository.findNextScreeningsAfter(
                 room.getId(), currentEndTime);
 

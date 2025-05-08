@@ -23,12 +23,12 @@ public class Screening {
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
-    @JsonIgnoreProperties({"screenings", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "screenings", "hibernateLazyInitializer", "handler" })
     private Movie movie;
 
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
-    @JsonIgnoreProperties({"screenings", "seats", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "screenings", "seats", "hibernateLazyInitializer", "handler" })
     private Room room;
 
     @Column(nullable = false)
@@ -52,8 +52,20 @@ public class Screening {
     @Column(length = 50)
     private String format = "Digital";
 
+    @Column(name = "is_highlighted")
+    private Boolean isHighlighted = false;
+
+    @Column(name = "booking_percentage")
+    private Double bookingPercentage = 0.0;
+
+    @Column(name = "show_type", length = 30)
+    private String showType = "Regular";
+
+    @Column(name = "has_dynamic_pricing")
+    private Boolean hasDynamicPricing = false;
+
     @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"screening"})
+    @JsonIgnoreProperties({ "screening" })
     private List<Reservation> reservations = new ArrayList<>();
 
     @Transient
@@ -68,7 +80,8 @@ public class Screening {
 
     @Transient
     public int getAvailableSeats() {
-        if (room == null) return 0;
+        if (room == null)
+            return 0;
 
         int totalSeats = room.getCapacity();
         int reservedSeats = 0;
@@ -80,5 +93,24 @@ public class Screening {
         }
 
         return totalSeats - reservedSeats;
+    }
+
+    @Transient
+    public void updateBookingPercentage() {
+        if (room == null) {
+            this.bookingPercentage = 0.0;
+            return;
+        }
+
+        int totalSeats = room.getCapacity();
+        int reservedSeats = 0;
+
+        if (reservations != null) {
+            for (Reservation reservation : reservations) {
+                reservedSeats += reservation.getSeatReservations().size();
+            }
+        }
+
+        this.bookingPercentage = totalSeats > 0 ? (double) reservedSeats / totalSeats * 100 : 0.0;
     }
 }
