@@ -1,6 +1,7 @@
 package org.example.backend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.MovieDTO;
@@ -29,7 +30,7 @@ public class MovieController {
 
     @PostMapping("/tmdb/{tmdbId}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create movie from TMDB", description = "Creates a new movie by fetching data from TMDB API (Admin only)")
+    @Operation(summary = "Create movie from TMDB", description = "Creates a new movie by fetching data from TMDB API (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Movie> createMovieFromTMDB(@PathVariable Integer tmdbId) {
         Movie movie = movieService.createMovieFromTMDB(tmdbId);
         return ResponseEntity.ok(movie);
@@ -73,7 +74,7 @@ public class MovieController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete a movie", description = "Deletes a movie by its ID (Admin only)")
+    @Operation(summary = "Delete a movie", description = "Deletes a movie by its ID (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
         log.info("Deleting movie with id: {}", id);
         try {

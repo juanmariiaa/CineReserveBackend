@@ -1,6 +1,7 @@
 package org.example.backend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ReservationCreateDTO;
@@ -25,42 +26,42 @@ public class ReservationController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all reservations", description = "Retrieves a list of all reservations (Admin only)")
+    @Operation(summary = "Get all reservations", description = "Retrieves a list of all reservations (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Reservation>> getAllReservations() {
         List<Reservation> reservations = reservationService.getAllReservations();
         return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get reservation by ID", description = "Retrieves a single reservation by its ID")
+    @Operation(summary = "Get reservation by ID", description = "Retrieves a single reservation by its ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Reservation reservation = reservationService.getReservationById(id);
         return ResponseEntity.ok(reservation);
     }
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get reservations by user", description = "Retrieves all reservations for a specific user")
+    @Operation(summary = "Get reservations by user", description = "Retrieves all reservations for a specific user", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Reservation>> getReservationsByUser(@PathVariable Long userId) {
         List<Reservation> reservations = reservationService.getReservationsByUser(userId);
         return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/screening/{screeningId}")
-    @Operation(summary = "Get reservations by screening", description = "Retrieves all reservations for a specific screening")
+    @Operation(summary = "Get reservations by screening", description = "Retrieves all reservations for a specific screening", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Reservation>> getReservationsByScreening(@PathVariable Long screeningId) {
         List<Reservation> reservations = reservationService.getReservationsByScreening(screeningId);
         return ResponseEntity.ok(reservations);
     }
 
     @PostMapping
-    @Operation(summary = "Create a reservation", description = "Creates a new reservation for a screening with selected seats")
+    @Operation(summary = "Create a reservation", description = "Creates a new reservation for a screening with selected seats", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Reservation> createReservation(@Valid @RequestBody ReservationCreateDTO dto) {
         Reservation reservation = reservationService.createReservation(dto);
         return ResponseEntity.ok(reservation);
     }
 
     @PutMapping("/{reservationId}/seats")
-    @Operation(summary = "Modify seats in a reservation", description = "Modifies the seats associated with an existing reservation")
+    @Operation(summary = "Modify seats in a reservation", description = "Modifies the seats associated with an existing reservation", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Reservation> modifySeats(
             @PathVariable Long reservationId,
             @Valid @RequestBody SeatModificationDTO dto) {
@@ -69,7 +70,7 @@ public class ReservationController {
     }
 
     @PutMapping("/{reservationId}/cancel")
-    @Operation(summary = "Cancel a reservation", description = "Cancels an existing reservation")
+    @Operation(summary = "Cancel a reservation", description = "Cancels an existing reservation", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
         return ResponseEntity.noContent().build();

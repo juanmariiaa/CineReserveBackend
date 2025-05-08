@@ -1,6 +1,7 @@
 package org.example.backend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class ScreeningController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a screening", description = "Creates a new screening (Admin only)")
+    @Operation(summary = "Create a screening", description = "Creates a new screening (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Screening> createScreening(@Valid @RequestBody ScreeningCreationDTO dto) {
         Screening screening = screeningService.createScreening(dto);
         return ResponseEntity.ok(screening);
@@ -55,7 +56,7 @@ public class ScreeningController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update a screening", description = "Updates an existing screening (Admin only)")
+    @Operation(summary = "Update a screening", description = "Updates an existing screening (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Screening> updateScreening(
             @PathVariable Long id,
             @Valid @RequestBody ScreeningCreationDTO dto) {
@@ -65,7 +66,7 @@ public class ScreeningController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete a screening", description = "Deletes a screening by its ID (Admin only)")
+    @Operation(summary = "Delete a screening", description = "Deletes a screening by its ID (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> deleteScreening(@PathVariable Long id) {
         screeningService.deleteScreening(id);
         return ResponseEntity.noContent().build();
