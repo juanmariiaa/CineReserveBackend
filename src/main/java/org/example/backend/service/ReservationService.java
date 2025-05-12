@@ -9,6 +9,9 @@ import org.example.backend.exception.BusinessException;
 import org.example.backend.model.*;
 import org.example.backend.model.enums.ReservationStatus;
 import org.example.backend.repository.*;
+import org.example.backend.security.service.UserDetailsImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,7 +30,19 @@ public class ReservationService {
     private final UserRepository userRepository;
 
     public Reservation createReservation(ReservationCreateDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
+        // Get the authenticated user if userId is not provided
+        Long userId = dto.getUserId();
+        if (userId == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                userId = userDetails.getId();
+            } else {
+                throw new BusinessException("User not authenticated or invalid authentication");
+            }
+        }
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         Screening screening = screeningRepository.findById(dto.getScreeningId())
@@ -48,7 +63,8 @@ public class ReservationService {
                     .orElseThrow(() -> new EntityNotFoundException("Seat not found"));
 
             if (isSeatAlreadyReserved(screening, seat)) {
-                throw new BusinessException("The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
+                throw new BusinessException(
+                        "The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
             }
 
             reservation.addSeatReservation(seat);
@@ -95,7 +111,8 @@ public class ReservationService {
                         .orElseThrow(() -> new EntityNotFoundException("Seat not found"));
 
                 if (isSeatAlreadyReserved(reservation.getScreening(), seat)) {
-                    throw new BusinessException("The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
+                    throw new BusinessException(
+                            "The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
                 }
 
                 reservation.addSeatReservation(seat);
@@ -107,10 +124,8 @@ public class ReservationService {
 
     private boolean isSeatAlreadyReserved(Screening screening, Seat seat) {
         return seatReservationRepository.findBySeat(seat).stream()
-                .anyMatch(sr ->
-                        sr.getReservation().getScreening().getId().equals(screening.getId()) &&
-                                !ReservationStatus.CANCELLED.equals(sr.getReservation().getStatus())
-                );
+                .anyMatch(sr -> sr.getReservation().getScreening().getId().equals(screening.getId()) &&
+                        !ReservationStatus.CANCELLED.equals(sr.getReservation().getStatus()));
     }
 
     public List<Reservation> getAllReservations() {
@@ -135,5 +150,12 @@ public class ReservationService {
                 .orElseThrow(() -> new EntityNotFoundException("Screening not found with ID: " + screeningId));
 
         return reservationRepository.findByScreening(screening);
+    }
+
+    public List<Reservation> getReservationsByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+
+        return reservationRepository.findByUserId(user.getId());
     }
 }

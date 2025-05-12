@@ -10,6 +10,8 @@ import org.example.backend.model.Reservation;
 import org.example.backend.service.ReservationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -53,6 +55,15 @@ public class ReservationController {
         return ResponseEntity.ok(reservations);
     }
 
+    @GetMapping("/user")
+    @Operation(summary = "Get current user's reservations", description = "Retrieves all reservations for the authenticated user", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<List<Reservation>> getCurrentUserReservations() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        List<Reservation> reservations = reservationService.getReservationsByUsername(username);
+        return ResponseEntity.ok(reservations);
+    }
+
     @PostMapping
     @Operation(summary = "Create a reservation", description = "Creates a new reservation for a screening with selected seats", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Reservation> createReservation(@Valid @RequestBody ReservationCreateDTO dto) {
@@ -69,7 +80,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservation);
     }
 
-    @PutMapping("/{reservationId}/cancel")
+    @DeleteMapping("/{reservationId}")
     @Operation(summary = "Cancel a reservation", description = "Cancels an existing reservation", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
