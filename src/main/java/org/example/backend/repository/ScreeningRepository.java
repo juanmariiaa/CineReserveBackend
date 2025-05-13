@@ -8,9 +8,18 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScreeningRepository extends JpaRepository<Screening, Long> {
+
+        // Special query to get all screenings with fully loaded relationships
+        @Query("SELECT s FROM Screening s JOIN FETCH s.room JOIN FETCH s.movie")
+        List<Screening> findAllWithRoomAndMovie();
+
+        // Find a specific screening with fully loaded relationships
+        @Query("SELECT s FROM Screening s JOIN FETCH s.room JOIN FETCH s.movie WHERE s.id = :id")
+        Optional<Screening> findByIdWithRoomAndMovie(@Param("id") Long id);
 
         @Query("SELECT s FROM Screening s WHERE s.room.id = :roomId AND " +
                         "((s.startTime < :endTime AND s.endTime > :startTime))")
@@ -18,6 +27,13 @@ public interface ScreeningRepository extends JpaRepository<Screening, Long> {
                         @Param("roomId") Long roomId,
                         @Param("startTime") LocalDateTime startTime,
                         @Param("endTime") LocalDateTime endTime);
+
+        // Fixed query to work with PostgreSQL - use CAST instead of FUNCTION
+        @Query("SELECT s FROM Screening s WHERE s.room.id = :roomId AND " +
+                        "CAST(s.startTime AS date) = CAST(:date AS date)")
+        List<Screening> findByRoomIdAndDate(
+                        @Param("roomId") Long roomId,
+                        @Param("date") LocalDateTime date);
 
         @Query("SELECT s FROM Screening s WHERE s.room.id = :roomId AND " +
                         "s.startTime > :afterTime ORDER BY s.startTime ASC")

@@ -119,7 +119,6 @@ public class MovieService {
         return savedMovie;
     }
 
-
     public Movie getMovieById(Long id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Movie not found"));
