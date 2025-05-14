@@ -3,9 +3,9 @@ package org.example.backend.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ScreeningCreationDTO;
+import org.example.backend.dto.ScreeningBasicDTO;
 import org.example.backend.dto.ScreeningDateDTO;
 import org.example.backend.dto.ScreeningTimeDTO;
-import org.example.backend.dto.ScreeningTimeDTO.ScreeningTimeSlot;
 import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.exception.RoomNotAvailableException;
 import org.example.backend.model.Movie;
@@ -19,11 +19,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -178,85 +178,6 @@ public class ScreeningService {
                 .toList();
     }
 
-    public List<Screening> getScreeningsByTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
-        return screeningRepository.findByStartTimeBetweenOrderByStartTime(startTime, endTime);
-    }
-
-    public ScreeningDateDTO getAvailableDatesForMovie(Long movieId) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime endDate = now.plusMonths(1); // Show screenings for the next month
-
-        List<Screening> screenings = screeningRepository.findByMovieIdAndDateRange(movieId, now, endDate);
-
-        // Extract unique dates with screenings and sort them
-        Set<LocalDate> availableDates = screenings.stream()
-                .map(screening -> screening.getStartTime().toLocalDate())
-                .collect(Collectors.toCollection(TreeSet::new)); // TreeSet keeps elements sorted
-
-        return new ScreeningDateDTO(movieId, movie.getTitle(), availableDates);
-    }
-
-    public ScreeningTimeDTO getScreeningsByMovieAndDate(Long movieId, LocalDate date) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
-
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
-
-        List<Screening> screenings = screeningRepository.findByMovieIdAndStartTimeBetween(movieId, startOfDay,
-                endOfDay);
-
-        List<ScreeningTimeSlot> timeSlots = screenings.stream()
-                .map(this::convertToTimeSlot)
-                .sorted(Comparator.comparing(ScreeningTimeSlot::getStartTime))
-                .collect(Collectors.toList());
-
-        return new ScreeningTimeDTO(movieId, movie.getTitle(), date, timeSlots);
-    }
-
-    public List<ScreeningTimeDTO> getScreeningsByMovieForDateRange(Long movieId, LocalDate startDate,
-            LocalDate endDate) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
-
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-
-        List<Screening> screenings = screeningRepository.findByMovieIdAndDateRange(movieId, startDateTime, endDateTime);
-
-        // Group screenings by date
-        return screenings.stream()
-                .collect(Collectors.groupingBy(screening -> screening.getStartTime().toLocalDate()))
-                .entrySet().stream()
-                .map(entry -> {
-                    List<ScreeningTimeSlot> timeSlots = entry.getValue().stream()
-                            .map(this::convertToTimeSlot)
-                            .sorted(Comparator.comparing(ScreeningTimeSlot::getStartTime))
-                            .collect(Collectors.toList());
-
-                    return new ScreeningTimeDTO(movieId, movie.getTitle(), entry.getKey(), timeSlots);
-                })
-                .sorted(Comparator.comparing(ScreeningTimeDTO::getDate))
-                .collect(Collectors.toList());
-    }
-
-    private ScreeningTimeSlot convertToTimeSlot(Screening screening) {
-        ScreeningTimeSlot slot = new ScreeningTimeSlot();
-        slot.setScreeningId(screening.getId());
-        slot.setStartTime(screening.getStartTime().toLocalTime());
-        slot.setFormat(screening.getFormat());
-        slot.setIs3D(screening.getIs3D());
-        slot.setLanguage(screening.getLanguage());
-        slot.setHasSubtitles(screening.getHasSubtitles());
-        slot.setRoomNumber(screening.getRoom().getNumber());
-        slot.setAvailableSeats(screening.getAvailableSeats());
-        slot.setTicketPrice(screening.getTicketPrice());
-        return slot;
-    }
-
     private boolean checkRoomAvailabilityForUpdate(Room room, LocalDateTime startTime, LocalDateTime endTime,
             Long screeningId) {
         List<Screening> overlappingScreenings = screeningRepository.findOverlappingScreenings(
@@ -287,5 +208,164 @@ public class ScreeningService {
 
         Screening nextScreening = nextScreenings.get(0);
         return nextScreening.getStartTime().isAfter(cleanupEndTime);
+    }
+
+    public List<ScreeningBasicDTO> getAllScreeningsBasic() {
+        return screeningRepository.findAll().stream()
+                .map(ScreeningBasicDTO::fromScreening)
+                .collect(Collectors.toList());
+    }
+
+    public ScreeningBasicDTO getScreeningBasicById(Long id) {
+        Screening screening = screeningRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Screening not found with ID: " + id));
+        return ScreeningBasicDTO.fromScreening(screening);
+    }
+
+    public List<ScreeningBasicDTO> getScreeningsByMovieBasic(Long movieId) {
+        if (!movieRepository.existsById(movieId)) {
+            throw new ResourceNotFoundException("Movie not found with ID: " + movieId);
+        }
+        return screeningRepository.findByMovieIdAndDateRange(
+                movieId,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMonths(3))
+                .stream()
+                .map(ScreeningBasicDTO::fromScreening)
+                .collect(Collectors.toList());
+    }
+
+    public List<ScreeningBasicDTO> getScreeningsByRoomBasic(Long roomId) {
+        if (!roomRepository.existsById(roomId)) {
+            throw new ResourceNotFoundException("Room not found with ID: " + roomId);
+        }
+
+        return screeningRepository.findAll().stream()
+                .filter(screening -> screening.getRoom().getId().equals(roomId))
+                .map(ScreeningBasicDTO::fromScreening)
+                .collect(Collectors.toList());
+    }
+
+    public List<ScreeningBasicDTO> getScreeningsByDateBasic(LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        return screeningRepository.findAll().stream()
+                .filter(screening -> screening.getStartTime().isAfter(startOfDay) &&
+                        screening.getStartTime().isBefore(endOfDay))
+                .map(ScreeningBasicDTO::fromScreening)
+                .collect(Collectors.toList());
+    }
+
+    public ScreeningDateDTO getAvailableDatesForMovie(Long movieId) {
+        if (!movieRepository.existsById(movieId)) {
+            throw new ResourceNotFoundException("Movie not found with ID: " + movieId);
+        }
+
+        Set<LocalDate> dates = screeningRepository.findByMovieIdAndDateRange(
+                movieId,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMonths(3))
+                .stream()
+                .map(screening -> screening.getStartTime().toLocalDate())
+                .collect(Collectors.toSet());
+
+        Movie movie = movieRepository.findById(movieId).orElseThrow();
+        ScreeningDateDTO dateDTO = new ScreeningDateDTO();
+        dateDTO.setMovieId(movieId);
+        dateDTO.setMovieTitle(movie.getTitle());
+        dateDTO.setAvailableDates(dates);
+        return dateDTO;
+    }
+
+    public ScreeningTimeDTO getScreeningsByMovieAndDate(Long movieId, LocalDate date) {
+        if (!movieRepository.existsById(movieId)) {
+            throw new ResourceNotFoundException("Movie not found with ID: " + movieId);
+        }
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        List<Screening> screeningsForDate = screeningRepository.findByMovieIdAndDateRange(
+                movieId, startOfDay, endOfDay);
+
+        Movie movie = movieRepository.findById(movieId).orElseThrow();
+        List<ScreeningTimeDTO.ScreeningTimeSlot> timeSlots = screeningsForDate.stream()
+                .map(screening -> {
+                    ScreeningTimeDTO.ScreeningTimeSlot slot = new ScreeningTimeDTO.ScreeningTimeSlot();
+                    slot.setScreeningId(screening.getId());
+                    slot.setStartTime(screening.getStartTime().toLocalTime());
+                    slot.setFormat(screening.getFormat());
+                    slot.setIs3D(screening.getIs3D());
+                    slot.setLanguage(screening.getLanguage());
+                    slot.setHasSubtitles(screening.getHasSubtitles());
+                    slot.setRoomNumber(screening.getRoom().getNumber());
+                    slot.setAvailableSeats(screening.getAvailableSeats());
+                    slot.setTicketPrice(screening.getTicketPrice());
+                    return slot;
+                })
+                .collect(Collectors.toList());
+
+        ScreeningTimeDTO timeDTO = new ScreeningTimeDTO();
+        timeDTO.setMovieId(movieId);
+        timeDTO.setMovieTitle(movie.getTitle());
+        timeDTO.setDate(date);
+        timeDTO.setTimeSlots(timeSlots);
+        return timeDTO;
+    }
+
+    public List<ScreeningTimeDTO> getScreeningsByMovieForDateRange(Long movieId, LocalDate startDate,
+            LocalDate endDate) {
+        if (!movieRepository.existsById(movieId)) {
+            throw new ResourceNotFoundException("Movie not found with ID: " + movieId);
+        }
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        List<Screening> screeningsInRange = screeningRepository.findByMovieIdAndDateRange(
+                movieId, startDateTime, endDateTime);
+
+        Movie movie = movieRepository.findById(movieId).orElseThrow();
+
+        // Group screenings by date
+        Map<LocalDate, List<Screening>> screeningsByDate = screeningsInRange.stream()
+                .collect(Collectors.groupingBy(s -> s.getStartTime().toLocalDate()));
+
+        return screeningsByDate.entrySet().stream()
+                .map(entry -> {
+                    List<ScreeningTimeDTO.ScreeningTimeSlot> timeSlots = entry.getValue().stream()
+                            .map(screening -> {
+                                ScreeningTimeDTO.ScreeningTimeSlot slot = new ScreeningTimeDTO.ScreeningTimeSlot();
+                                slot.setScreeningId(screening.getId());
+                                slot.setStartTime(screening.getStartTime().toLocalTime());
+                                slot.setFormat(screening.getFormat());
+                                slot.setIs3D(screening.getIs3D());
+                                slot.setLanguage(screening.getLanguage());
+                                slot.setHasSubtitles(screening.getHasSubtitles());
+                                slot.setRoomNumber(screening.getRoom().getNumber());
+                                slot.setAvailableSeats(screening.getAvailableSeats());
+                                slot.setTicketPrice(screening.getTicketPrice());
+                                return slot;
+                            })
+                            .collect(Collectors.toList());
+
+                    ScreeningTimeDTO dto = new ScreeningTimeDTO();
+                    dto.setMovieId(movieId);
+                    dto.setMovieTitle(movie.getTitle());
+                    dto.setDate(entry.getKey());
+                    dto.setTimeSlots(timeSlots);
+                    return dto;
+                })
+                .sorted(Comparator.comparing(ScreeningTimeDTO::getDate))
+                .collect(Collectors.toList());
+    }
+
+    public List<Screening> getScreeningsByTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
+        return screeningRepository.findAll().stream()
+                .filter(screening -> (screening.getStartTime().isAfter(startTime)
+                        || screening.getStartTime().isEqual(startTime)) &&
+                        (screening.getStartTime().isBefore(endTime) || screening.getStartTime().isEqual(endTime)))
+                .collect(Collectors.toList());
     }
 }

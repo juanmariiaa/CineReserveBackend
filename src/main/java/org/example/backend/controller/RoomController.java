@@ -2,6 +2,7 @@ package org.example.backend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.backend.dto.RoomBasicDTO;
 import org.example.backend.dto.RoomCreationDTO;
 import org.example.backend.model.Room;
 import org.example.backend.service.RoomService;
@@ -31,9 +32,21 @@ public class RoomController {
         return ResponseEntity.ok(room);
     }
 
+    @GetMapping("/basic/{id}")
+    public ResponseEntity<RoomBasicDTO> getRoomBasicById(@PathVariable Long id) {
+        RoomBasicDTO room = roomService.findBasicById(id);
+        return ResponseEntity.ok(room);
+    }
+
     @GetMapping
     public ResponseEntity<List<Room>> getAllRooms() {
         List<Room> rooms = roomService.findAll();
+        return ResponseEntity.ok(rooms);
+    }
+
+    @GetMapping("/basic")
+    public ResponseEntity<List<RoomBasicDTO>> getAllRoomsBasic() {
+        List<RoomBasicDTO> rooms = roomService.findAllBasic();
         return ResponseEntity.ok(rooms);
     }
 
@@ -49,6 +62,7 @@ public class RoomController {
         roomService.deleteRoomWithHighestNumber();
         return ResponseEntity.noContent().build();
     }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {

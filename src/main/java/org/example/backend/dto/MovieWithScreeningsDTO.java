@@ -55,9 +55,9 @@ public class MovieWithScreeningsDTO {
         dto.setHasSubtitles(screening.getHasSubtitles());
         dto.setIs3D(screening.getIs3D());
         dto.setAvailableSeats(screening.getAvailableSeats());
-        dto.setIsHighlighted(screening.getIsHighlighted());
-        dto.setShowType(screening.getShowType());
-        dto.setBookingPercentage(screening.getBookingPercentage());
+
+        // Removed default values and calculations related to isHighlighted, showType,
+        // and bookingPercentage
         return dto;
     }
 }

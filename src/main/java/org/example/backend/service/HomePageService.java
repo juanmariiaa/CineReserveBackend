@@ -17,82 +17,98 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class HomePageService {
-    private final MovieRepository movieRepository;
-    private final ScreeningRepository screeningRepository;
+        private final MovieRepository movieRepository;
+        private final ScreeningRepository screeningRepository;
 
-    public List<ScreeningDTO> getTodaysScreenings() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusSeconds(1);
+        public List<ScreeningDTO> getTodaysScreenings() {
+                LocalDate today = LocalDate.now();
+                LocalDateTime startOfDay = today.atStartOfDay();
+                LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusSeconds(1);
 
-        return screeningRepository.findByStartTimeBetweenOrderByStartTime(startOfDay, endOfDay)
-                .stream()
-                .map(this::convertToScreeningDTO)
-                .collect(Collectors.toList());
-    }
+                return screeningRepository.findAll().stream()
+                                .filter(screening -> screening.getStartTime().isAfter(startOfDay) &&
+                                                screening.getStartTime().isBefore(endOfDay))
+                                .sorted((s1, s2) -> s1.getStartTime().compareTo(s2.getStartTime()))
+                                .map(this::convertToScreeningDTO)
+                                .collect(Collectors.toList());
+        }
 
-    public List<ScreeningDTO> getFeaturedScreenings() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime oneWeekLater = today.plusDays(7).atStartOfDay();
+        public List<ScreeningDTO> getFeaturedScreenings() {
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime oneWeekLater = now.plusDays(7);
 
-        return screeningRepository.findByIsHighlightedTrueAndStartTimeBetween(startOfDay, oneWeekLater)
-                .stream()
-                .map(this::convertToScreeningDTO)
-                .collect(Collectors.toList());
-    }
+                // Get screenings for featured movies in the next week
+                List<Movie> featuredMovies = movieRepository.findByIsFeaturedTrue();
+                List<Long> featuredMovieIds = featuredMovies.stream()
+                                .map(Movie::getId)
+                                .collect(Collectors.toList());
 
-    public List<MovieWithScreeningsDTO> getFeaturedMoviesWithScreenings() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneWeekLater = today.plusDays(7).atTime(23, 59, 59);
+                return screeningRepository.findAll().stream()
+                                .filter(screening -> featuredMovieIds.contains(screening.getMovie().getId()) &&
+                                                screening.getStartTime().isAfter(now) &&
+                                                screening.getStartTime().isBefore(oneWeekLater))
+                                .sorted((s1, s2) -> s1.getStartTime().compareTo(s2.getStartTime()))
+                                .limit(10) // Limit to the first 10 screenings
+                                .map(this::convertToScreeningDTO)
+                                .collect(Collectors.toList());
+        }
 
-        List<Movie> featuredMovies = movieRepository.findByIsFeaturedTrue();
+        public List<MovieWithScreeningsDTO> getFeaturedMoviesWithScreenings() {
+                LocalDate today = LocalDate.now();
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime oneWeekLater = today.plusDays(7).atTime(23, 59, 59);
 
-        return featuredMovies.stream()
-                .map(movie -> {
-                    List<Screening> screenings = screeningRepository.findByMovieIdAndStartTimeAfterAndEndTimeBefore(
-                            movie.getId(), now, oneWeekLater);
-                    return new MovieWithScreeningsDTO(movie, screenings);
-                })
-                .filter(dto -> !dto.getScreenings().isEmpty())
-                .collect(Collectors.toList());
-    }
+                List<Movie> featuredMovies = movieRepository.findByIsFeaturedTrue();
 
-    public List<MovieWithScreeningsDTO> getCurrentMoviesWithScreenings() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneWeekLater = today.plusDays(7).atTime(23, 59, 59);
+                return featuredMovies.stream()
+                                .map(movie -> {
+                                        List<Screening> screenings = screeningRepository.findAll().stream()
+                                                        .filter(screening -> screening.getMovie().getId()
+                                                                        .equals(movie.getId()) &&
+                                                                        screening.getStartTime().isAfter(now) &&
+                                                                        screening.getStartTime().isBefore(oneWeekLater))
+                                                        .collect(Collectors.toList());
+                                        return new MovieWithScreeningsDTO(movie, screenings);
+                                })
+                                .filter(dto -> !dto.getScreenings().isEmpty())
+                                .collect(Collectors.toList());
+        }
 
-        List<Movie> activeMovies = movieRepository.findByIsActiveTrue();
+        public List<MovieWithScreeningsDTO> getCurrentMoviesWithScreenings() {
+                LocalDate today = LocalDate.now();
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime oneWeekLater = today.plusDays(7).atTime(23, 59, 59);
 
-        return activeMovies.stream()
-                .map(movie -> {
-                    List<Screening> screenings = screeningRepository.findByMovieIdAndStartTimeAfterAndEndTimeBefore(
-                            movie.getId(), now, oneWeekLater);
-                    return new MovieWithScreeningsDTO(movie, screenings);
-                })
-                .filter(dto -> !dto.getScreenings().isEmpty())
-                .collect(Collectors.toList());
-    }
+                List<Movie> activeMovies = movieRepository.findByIsActiveTrue();
 
-    private ScreeningDTO convertToScreeningDTO(Screening screening) {
-        ScreeningDTO dto = new ScreeningDTO();
-        dto.setId(screening.getId());
-        dto.setMovieTitle(screening.getMovie().getTitle());
-        dto.setMoviePosterUrl(screening.getMovie().getPosterUrl());
-        dto.setStartTime(screening.getStartTime());
-        dto.setEndTime(screening.getEndTime());
-        dto.setRoomNumber(screening.getRoom().getNumber());
-        dto.setTicketPrice(screening.getTicketPrice());
-        dto.setFormat(screening.getFormat());
-        dto.setLanguage(screening.getLanguage());
-        dto.setHasSubtitles(screening.getHasSubtitles());
-        dto.setIs3D(screening.getIs3D());
-        dto.setAvailableSeats(screening.getAvailableSeats());
-        dto.setIsHighlighted(screening.getIsHighlighted());
-        dto.setShowType(screening.getShowType());
-        dto.setBookingPercentage(screening.getBookingPercentage());
-        return dto;
-    }
+                return activeMovies.stream()
+                                .map(movie -> {
+                                        List<Screening> screenings = screeningRepository.findAll().stream()
+                                                        .filter(screening -> screening.getMovie().getId()
+                                                                        .equals(movie.getId()) &&
+                                                                        screening.getStartTime().isAfter(now) &&
+                                                                        screening.getStartTime().isBefore(oneWeekLater))
+                                                        .collect(Collectors.toList());
+                                        return new MovieWithScreeningsDTO(movie, screenings);
+                                })
+                                .filter(dto -> !dto.getScreenings().isEmpty())
+                                .collect(Collectors.toList());
+        }
+
+        private ScreeningDTO convertToScreeningDTO(Screening screening) {
+                ScreeningDTO dto = new ScreeningDTO();
+                dto.setId(screening.getId());
+                dto.setMovieTitle(screening.getMovie().getTitle());
+                dto.setMoviePosterUrl(screening.getMovie().getPosterUrl());
+                dto.setStartTime(screening.getStartTime());
+                dto.setEndTime(screening.getEndTime());
+                dto.setRoomNumber(screening.getRoom().getNumber());
+                dto.setTicketPrice(screening.getTicketPrice());
+                dto.setFormat(screening.getFormat());
+                dto.setLanguage(screening.getLanguage());
+                dto.setHasSubtitles(screening.getHasSubtitles());
+                dto.setIs3D(screening.getIs3D());
+                dto.setAvailableSeats(screening.getAvailableSeats());
+                return dto;
+        }
 }

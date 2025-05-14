@@ -22,7 +22,4 @@ public class ScreeningDTO {
     private Boolean hasSubtitles;
     private Boolean is3D;
     private Integer availableSeats;
-    private Boolean isHighlighted;
-    private String showType;
-    private Double bookingPercentage;
 }

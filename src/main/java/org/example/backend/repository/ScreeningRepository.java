@@ -34,26 +34,4 @@ public interface ScreeningRepository extends JpaRepository<Screening, Long> {
                         @Param("movieId") Long movieId,
                         @Param("fromDate") LocalDateTime fromDate,
                         @Param("toDate") LocalDateTime toDate);
-
-        @Query("SELECT s FROM Screening s WHERE s.startTime BETWEEN :startTime AND :endTime ORDER BY s.startTime")
-        List<Screening> findByStartTimeBetweenOrderByStartTime(
-                        @Param("startTime") LocalDateTime startTime,
-                        @Param("endTime") LocalDateTime endTime);
-
-        @Query("SELECT s FROM Screening s WHERE s.isHighlighted = true AND s.startTime BETWEEN :startTime AND :endTime ORDER BY s.startTime")
-        List<Screening> findByIsHighlightedTrueAndStartTimeBetween(
-                        @Param("startTime") LocalDateTime startTime,
-                        @Param("endTime") LocalDateTime endTime);
-
-        @Query("SELECT s FROM Screening s WHERE s.movie.id = :movieId AND s.startTime > :startTime AND s.endTime < :endTime ORDER BY s.startTime")
-        List<Screening> findByMovieIdAndStartTimeAfterAndEndTimeBefore(
-                        @Param("movieId") Long movieId,
-                        @Param("startTime") LocalDateTime startTime,
-                        @Param("endTime") LocalDateTime endTime);
-
-        @Query("SELECT s FROM Screening s WHERE s.movie.id = :movieId AND s.startTime BETWEEN :startTime AND :endTime ORDER BY s.startTime")
-        List<Screening> findByMovieIdAndStartTimeBetween(
-                        @Param("movieId") Long movieId,
-                        @Param("startTime") LocalDateTime startTime,
-                        @Param("endTime") LocalDateTime endTime);
 }

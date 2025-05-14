@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.backend.dto.ScreeningBasicDTO;
 import org.example.backend.dto.ScreeningCreationDTO;
 import org.example.backend.dto.ScreeningDateDTO;
 import org.example.backend.dto.ScreeningTimeDTO;
@@ -39,10 +40,24 @@ public class ScreeningController {
         return ResponseEntity.ok(screenings);
     }
 
+    @GetMapping("/basic")
+    @Operation(summary = "Get all screenings with basic info", description = "Retrieves a list of all screenings with only basic information")
+    public ResponseEntity<List<ScreeningBasicDTO>> getAllScreeningsBasic() {
+        List<ScreeningBasicDTO> screenings = screeningService.getAllScreeningsBasic();
+        return ResponseEntity.ok(screenings);
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get screening by ID", description = "Retrieves a single screening by its ID")
     public ResponseEntity<Screening> getScreeningById(@PathVariable Long id) {
         Screening screening = screeningService.getScreeningById(id);
+        return ResponseEntity.ok(screening);
+    }
+
+    @GetMapping("/basic/{id}")
+    @Operation(summary = "Get basic screening by ID", description = "Retrieves basic info of a single screening by its ID")
+    public ResponseEntity<ScreeningBasicDTO> getScreeningBasicById(@PathVariable Long id) {
+        ScreeningBasicDTO screening = screeningService.getScreeningBasicById(id);
         return ResponseEntity.ok(screening);
     }
 
@@ -76,6 +91,13 @@ public class ScreeningController {
     @Operation(summary = "Get screenings by movie", description = "Retrieves all screenings for a specific movie")
     public ResponseEntity<List<Screening>> getScreeningsByMovie(@PathVariable Long movieId) {
         List<Screening> screenings = screeningService.getScreeningsByMovie(movieId);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/movie/{movieId}/basic")
+    @Operation(summary = "Get basic screenings by movie", description = "Retrieves basic info of all screenings for a specific movie")
+    public ResponseEntity<List<ScreeningBasicDTO>> getScreeningsByMovieBasic(@PathVariable Long movieId) {
+        List<ScreeningBasicDTO> screenings = screeningService.getScreeningsByMovieBasic(movieId);
         return ResponseEntity.ok(screenings);
     }
 
@@ -113,11 +135,26 @@ public class ScreeningController {
         return ResponseEntity.ok(screenings);
     }
 
+    @GetMapping("/room/{roomId}/basic")
+    @Operation(summary = "Get basic screenings by room", description = "Retrieves basic info of all screenings for a specific room")
+    public ResponseEntity<List<ScreeningBasicDTO>> getScreeningsByRoomBasic(@PathVariable Long roomId) {
+        List<ScreeningBasicDTO> screenings = screeningService.getScreeningsByRoomBasic(roomId);
+        return ResponseEntity.ok(screenings);
+    }
+
     @GetMapping("/date/{date}")
     @Operation(summary = "Get screenings by date", description = "Retrieves all screenings on a specific date")
     public ResponseEntity<List<Screening>> getScreeningsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<Screening> screenings = screeningService.getScreeningsByDate(date);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/date/{date}/basic")
+    @Operation(summary = "Get basic screenings by date", description = "Retrieves basic info of all screenings on a specific date")
+    public ResponseEntity<List<ScreeningBasicDTO>> getScreeningsByDateBasic(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<ScreeningBasicDTO> screenings = screeningService.getScreeningsByDateBasic(date);
         return ResponseEntity.ok(screenings);
     }
 

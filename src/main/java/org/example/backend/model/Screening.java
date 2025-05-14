@@ -21,12 +21,12 @@ public class Screening {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
     @JsonIgnoreProperties({ "screenings", "hibernateLazyInitializer", "handler" })
     private Movie movie;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
     @JsonIgnoreProperties({ "screenings", "seats", "hibernateLazyInitializer", "handler" })
     private Room room;
@@ -52,19 +52,7 @@ public class Screening {
     @Column(length = 50)
     private String format = "Digital";
 
-    @Column(name = "is_highlighted")
-    private Boolean isHighlighted = false;
-
-    @Column(name = "booking_percentage")
-    private Double bookingPercentage = 0.0;
-
-    @Column(name = "show_type", length = 30)
-    private String showType = "Regular";
-
-    @Column(name = "has_dynamic_pricing")
-    private Boolean hasDynamicPricing = false;
-
-    @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties({ "screening" })
     private List<Reservation> reservations = new ArrayList<>();
 
@@ -93,24 +81,5 @@ public class Screening {
         }
 
         return totalSeats - reservedSeats;
-    }
-
-    @Transient
-    public void updateBookingPercentage() {
-        if (room == null) {
-            this.bookingPercentage = 0.0;
-            return;
-        }
-
-        int totalSeats = room.getCapacity();
-        int reservedSeats = 0;
-
-        if (reservations != null) {
-            for (Reservation reservation : reservations) {
-                reservedSeats += reservation.getSeatReservations().size();
-            }
-        }
-
-        this.bookingPercentage = totalSeats > 0 ? (double) reservedSeats / totalSeats * 100 : 0.0;
     }
 }

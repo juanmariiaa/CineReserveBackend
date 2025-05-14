@@ -25,13 +25,13 @@ public class Seat {
     @Column(nullable = false)
     private Integer columnNumber;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
-    @JsonIgnoreProperties({"seats", "screenings"})
+    @JsonIgnoreProperties({ "seats", "screenings" })
     private Room room;
 
-    @OneToMany(mappedBy = "seat")
-    @JsonIgnoreProperties({"seat"})
+    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({ "seat" })
     private List<SeatReservation> seatReservations;
 
     public Seat(String rowLabel, Integer columnNumber, Room room) {
