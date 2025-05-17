@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.MovieDTO;
 import org.example.backend.dto.MovieSearchResponse;
+import org.example.backend.model.Genre;
 import org.example.backend.model.Movie;
+import org.example.backend.repository.GenreRepository;
 import org.example.backend.service.MovieService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ public class MovieController {
     private static final Logger log = LoggerFactory.getLogger(MovieController.class);
 
     private final MovieService movieService;
+    private final GenreRepository genreRepository;
 
     @PostMapping("/tmdb/{tmdbId}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,6 +72,46 @@ public class MovieController {
             return ResponseEntity.ok(results != null ? results : Collections.emptyList());
         } catch (Exception e) {
             return ResponseEntity.ok(Collections.emptyList()); // Return empty list instead of error
+        }
+    }
+
+    @GetMapping("/genres")
+    @Operation(summary = "Get all genres", description = "Retrieves a list of all available movie genres")
+    public ResponseEntity<List<String>> getAllGenres() {
+        log.info("Fetching all genres");
+        try {
+            List<String> genres = genreRepository.findAll().stream()
+                    .map(Genre::getName)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(genres);
+        } catch (Exception e) {
+            log.error("Error fetching genres: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        }
+    }
+
+    @GetMapping("/filter")
+    @Operation(summary = "Filter movies", description = "Filters movies based on criteria like genre, duration, rating, etc.")
+    public ResponseEntity<List<MovieDTO>> filterMovies(
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false) List<String> genres,
+            @RequestParam(required = false) String duration,
+            @RequestParam(required = false) String rating,
+            @RequestParam(required = false) String timeFrame,
+            @RequestParam(required = false) String sortBy) {
+        
+        log.info("Filtering movies with searchTerm={}, genres={}, duration={}, rating={}, timeFrame={}, sortBy={}",
+                searchTerm, genres, duration, rating, timeFrame, sortBy);
+        
+        try {
+            List<Movie> filteredMovies = movieService.getFilteredMovies(searchTerm, genres, duration, rating, timeFrame, sortBy);
+            List<MovieDTO> movieDTOs = filteredMovies.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(movieDTOs);
+        } catch (Exception e) {
+            log.error("Error filtering movies: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
 

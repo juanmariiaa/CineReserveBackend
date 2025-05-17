@@ -71,6 +71,8 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/genres").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/filter").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/screenings/**").permitAll()
                         .requestMatchers("/api/rooms/**").permitAll()
                         .requestMatchers("/api/seats/screening/**").permitAll() // Allow access to seat information
