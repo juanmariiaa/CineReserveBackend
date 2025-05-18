@@ -92,12 +92,11 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Cambia esto por la URL exacta de tu
-                                                                                 // frontend
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Frontend URL
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
         configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
-        configuration.setAllowCredentials(true); // Esto es crucial para permitir enviar cookies/credenciales
+        configuration.setAllowCredentials(true); // Allow credentials
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

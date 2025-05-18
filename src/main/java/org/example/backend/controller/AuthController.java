@@ -1,6 +1,7 @@
 package org.example.backend.controller;
 
 import jakarta.validation.Valid;
+import org.example.backend.dto.auth.GoogleTokenRequest;
 import org.example.backend.dto.auth.JwtResponse;
 import org.example.backend.dto.auth.LoginRequest;
 import org.example.backend.dto.auth.MessageResponse;
@@ -10,6 +11,7 @@ import org.example.backend.model.User;
 import org.example.backend.repository.RoleRepository;
 import org.example.backend.repository.UserRepository;
 import org.example.backend.security.jwt.JwtUtils;
+import org.example.backend.security.service.GoogleAuthService;
 import org.example.backend.security.service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,9 @@ public class AuthController {
 
     @Autowired
     JwtUtils jwtUtils;
+    
+    @Autowired
+    GoogleAuthService googleAuthService;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -64,6 +69,30 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles));
+    }
+    
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateWithGoogle(@Valid @RequestBody GoogleTokenRequest tokenRequest) {
+        try {
+            String jwt = googleAuthService.authenticateGoogleToken(tokenRequest.getToken());
+            
+            // Get the authenticated user details
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new JwtResponse(jwt,
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    roles));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/signup")
