@@ -57,14 +57,16 @@ public class Room {
         }
 
         for (int r = 0; r < rows; r++) {
-            String rowLabel = generateRowLabel(r);
+            String rowValue = generateRowValue(r);
             for (int c = 0; c < columns; c++) {
-                seats.add(new Seat(rowLabel, c + 1, this));
+                Seat seat = new Seat(rowValue, c + 1, this);
+                seat.setPrice(new java.math.BigDecimal("10.00"));
+                seats.add(seat);
             }
         }
     }
 
-    private String generateRowLabel(int rowIndex) {
+    private String generateRowValue(int rowIndex) {
         StringBuilder result = new StringBuilder();
 
         if (rowIndex > 25) {

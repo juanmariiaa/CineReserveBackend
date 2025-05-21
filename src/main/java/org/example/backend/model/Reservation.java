@@ -31,17 +31,21 @@ public class Reservation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"reservations", "password", "roles", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "reservations", "password", "roles", "hibernateLazyInitializer", "handler" })
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
-    @JsonIgnoreProperties({"reservations", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "reservations", "hibernateLazyInitializer", "handler" })
     private Screening screening;
 
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("reservation")
     private List<SeatReservation> seatReservations = new ArrayList<>();
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("reservation")
+    private Payment payment;
 
     public void addSeatReservation(Seat seat) {
         SeatReservation seatReservation = new SeatReservation();

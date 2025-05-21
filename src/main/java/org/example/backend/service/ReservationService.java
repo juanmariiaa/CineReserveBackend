@@ -64,7 +64,7 @@ public class ReservationService {
 
             if (isSeatAlreadyReserved(screening, seat)) {
                 throw new BusinessException(
-                        "The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
+                        "The seat " + seat.getRow() + seat.getNumber() + " is already reserved");
             }
 
             reservation.addSeatReservation(seat);
@@ -112,7 +112,7 @@ public class ReservationService {
 
                 if (isSeatAlreadyReserved(reservation.getScreening(), seat)) {
                     throw new BusinessException(
-                            "The seat " + seat.getRowLabel() + seat.getColumnNumber() + " is already reserved");
+                            "The seat " + seat.getRow() + seat.getNumber() + " is already reserved");
                 }
 
                 reservation.addSeatReservation(seat);

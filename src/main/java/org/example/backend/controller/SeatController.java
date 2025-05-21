@@ -56,8 +56,8 @@ public class SeatController {
 
                     Map<String, Object> seatMap = new HashMap<>();
                     seatMap.put("id", seat.getId());
-                    seatMap.put("row", seat.getRowLabel());
-                    seatMap.put("number", seat.getColumnNumber());
+                    seatMap.put("row", seat.getRow());
+                    seatMap.put("number", seat.getNumber());
                     seatMap.put("status", isReserved ? "RESERVED" : "AVAILABLE");
                     seatMap.put("roomId", seat.getRoom().getId());
 
