@@ -74,4 +74,17 @@ public class UserService {
         user.setIsActive(false);
         return userRepository.save(user);
     }
+    
+    public User giveAdminRole(Long id) {
+        User user = getUserById(id);
+        Set<Role> roles = user.getRoles();
+        
+        // Add ROLE_ADMIN if not already present
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new EntityNotFoundException("Admin role not found"));
+        roles.add(adminRole);
+        
+        user.setRoles(roles);
+        return userRepository.save(user);
+    }
 }

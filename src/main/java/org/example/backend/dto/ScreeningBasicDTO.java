@@ -10,6 +10,7 @@ public class ScreeningBasicDTO {
     private Long id;
     private Long movieId;
     private String movieTitle;
+    private String moviePosterUrl;
     private Long roomId;
     private Integer roomNumber;
     private LocalDateTime startTime;
@@ -27,6 +28,7 @@ public class ScreeningBasicDTO {
         if (screening.getMovie() != null) {
             dto.setMovieId(screening.getMovie().getId());
             dto.setMovieTitle(screening.getMovie().getTitle());
+            dto.setMoviePosterUrl(screening.getMovie().getPosterUrl());
         }
         if (screening.getRoom() != null) {
             dto.setRoomId(screening.getRoom().getId());
