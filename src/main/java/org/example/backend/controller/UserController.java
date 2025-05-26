@@ -70,4 +70,11 @@ public class UserController {
         User user = userService.deactivateUser(id);
         return ResponseEntity.ok(user);
     }
+    
+    @PutMapping("/{id}/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<User> giveAdminRole(@PathVariable Long id) {
+        User user = userService.giveAdminRole(id);
+        return ResponseEntity.ok(user);
+    }
 }
