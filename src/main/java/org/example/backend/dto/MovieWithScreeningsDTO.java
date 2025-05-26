@@ -49,7 +49,6 @@ public class MovieWithScreeningsDTO {
         dto.setStartTime(screening.getStartTime());
         dto.setEndTime(screening.getEndTime());
         dto.setRoomNumber(screening.getRoom().getNumber());
-        dto.setTicketPrice(screening.getTicketPrice());
         dto.setFormat(screening.getFormat());
         dto.setLanguage(screening.getLanguage());
         dto.setHasSubtitles(screening.getHasSubtitles());

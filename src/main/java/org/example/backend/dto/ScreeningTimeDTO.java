@@ -29,6 +29,5 @@ public class ScreeningTimeDTO {
         private Boolean hasSubtitles;
         private Integer roomNumber;
         private Integer availableSeats;
-        private Double ticketPrice;
     }
 }

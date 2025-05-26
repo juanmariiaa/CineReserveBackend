@@ -40,25 +40,44 @@ public class SeatController {
                 .collect(Collectors.toList());
 
         // Get all reservations for this screening
-        List<Reservation> screeningReservations = reservationService.getReservationsByScreening(screeningId);
-
-        // Get all reserved seat IDs
-        List<Long> reservedSeatIds = screeningReservations.stream()
-                .flatMap(reservation -> reservation.getSeatReservations().stream())
-                .map(SeatReservation::getSeat)
-                .map(Seat::getId)
-                .collect(Collectors.toList());
-
+        List<Reservation> allScreeningReservations = reservationService.getReservationsByScreening(screeningId);
+        
+        // Create a map to store seat status information
+        Map<Long, String> seatStatusMap = new HashMap<>();
+        
+        // Process each reservation and update seat status based on reservation status
+        for (Reservation reservation : allScreeningReservations) {
+            // Get all seats for this reservation
+            List<Seat> reservationSeats = reservation.getSeatReservations().stream()
+                    .map(SeatReservation::getSeat)
+                    .collect(Collectors.toList());
+            
+            // Update seat status based on reservation status
+            for (Seat seat : reservationSeats) {
+                // Only mark as reserved if the reservation is PENDING or CONFIRMED
+                if (reservation.getStatus() == org.example.backend.model.enums.ReservationStatus.PENDING ||
+                    reservation.getStatus() == org.example.backend.model.enums.ReservationStatus.CONFIRMED) {
+                    seatStatusMap.put(seat.getId(), "RESERVED");
+                }
+                // If the reservation is CANCELLED and the seat isn't already marked as RESERVED by another reservation
+                else if (reservation.getStatus() == org.example.backend.model.enums.ReservationStatus.CANCELLED &&
+                         !seatStatusMap.containsKey(seat.getId())) {
+                    seatStatusMap.put(seat.getId(), "AVAILABLE");
+                }
+            }
+        }
+        
         // Convert seats to response object with availability status
         List<Map<String, Object>> seatStatusList = roomSeats.stream()
                 .map(seat -> {
-                    boolean isReserved = reservedSeatIds.contains(seat.getId());
-
+                    // Get status from the map, default to AVAILABLE if not in the map
+                    String status = seatStatusMap.getOrDefault(seat.getId(), "AVAILABLE");
+                    
                     Map<String, Object> seatMap = new HashMap<>();
                     seatMap.put("id", seat.getId());
                     seatMap.put("row", seat.getRowLabel());
                     seatMap.put("number", seat.getColumnNumber());
-                    seatMap.put("status", isReserved ? "RESERVED" : "AVAILABLE");
+                    seatMap.put("status", status);
                     seatMap.put("roomId", seat.getRoom().getId());
 
                     return seatMap;

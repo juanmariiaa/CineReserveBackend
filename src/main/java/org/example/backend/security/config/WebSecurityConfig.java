@@ -76,6 +76,10 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/screenings/**").permitAll()
                         .requestMatchers("/api/rooms/**").permitAll()
                         .requestMatchers("/api/seats/screening/**").permitAll() // Allow access to seat information
+                        // Stripe webhook endpoint
+                        .requestMatchers("/webhooks/stripe").permitAll()
+                        // Payment endpoints
+                        .requestMatchers("/api/payments/**").permitAll()
                         // Swagger UI endpoints
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
@@ -92,9 +96,9 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Frontend URL
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://checkout.stripe.com")); // Frontend URL and Stripe
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token", "Stripe-Signature"));
         configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
         configuration.setAllowCredentials(true); // Allow credentials
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

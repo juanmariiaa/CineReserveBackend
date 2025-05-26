@@ -37,9 +37,6 @@ public class Screening {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
-    @Column(nullable = false)
-    private Double ticketPrice = 8.0;
-
     @Column
     private Boolean is3D = false;
 

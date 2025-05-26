@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.backend.model.enums.ReservationStatus;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,6 +25,10 @@ public class Reservation {
 
     @Column(name = "reservation_date", nullable = false)
     private LocalDateTime reservationDate;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,6 +47,10 @@ public class Reservation {
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("reservation")
     private List<SeatReservation> seatReservations = new ArrayList<>();
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("reservation")
+    private Payment payment;
 
     public void addSeatReservation(Seat seat) {
         SeatReservation seatReservation = new SeatReservation();

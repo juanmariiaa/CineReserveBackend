@@ -16,7 +16,6 @@ public class ScreeningDTO {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer roomNumber;
-    private Double ticketPrice;
     private String format;
     private String language;
     private Boolean hasSubtitles;

@@ -60,7 +60,6 @@ public class ScreeningService {
         screening.setRoom(room);
         screening.setStartTime(dto.getStartTime());
         screening.setEndTime(endTime);
-        screening.setTicketPrice(dto.getTicketPrice());
 
         screening.setIs3D(dto.getIs3D());
         screening.setHasSubtitles(dto.getHasSubtitles());
@@ -130,7 +129,6 @@ public class ScreeningService {
         screening.setRoom(room);
         screening.setStartTime(dto.getStartTime());
         screening.setEndTime(endTime);
-        screening.setTicketPrice(dto.getTicketPrice());
         screening.setIs3D(dto.getIs3D());
         screening.setHasSubtitles(dto.getHasSubtitles());
         screening.setLanguage(dto.getLanguage());
@@ -301,7 +299,6 @@ public class ScreeningService {
                     slot.setHasSubtitles(screening.getHasSubtitles());
                     slot.setRoomNumber(screening.getRoom().getNumber());
                     slot.setAvailableSeats(screening.getAvailableSeats());
-                    slot.setTicketPrice(screening.getTicketPrice());
                     return slot;
                 })
                 .collect(Collectors.toList());
@@ -345,7 +342,6 @@ public class ScreeningService {
                                 slot.setHasSubtitles(screening.getHasSubtitles());
                                 slot.setRoomNumber(screening.getRoom().getNumber());
                                 slot.setAvailableSeats(screening.getAvailableSeats());
-                                slot.setTicketPrice(screening.getTicketPrice());
                                 return slot;
                             })
                             .collect(Collectors.toList());
