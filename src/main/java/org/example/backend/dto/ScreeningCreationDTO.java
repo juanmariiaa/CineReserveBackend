@@ -19,9 +19,6 @@ public class ScreeningCreationDTO {
     @Future(message = "The screening date must be in the future")
     private LocalDateTime startTime;
 
-    @Min(value = 0, message = "The price cannot be negative")
-    private Double ticketPrice;
-
     private Boolean is3D = false;
     private Boolean hasSubtitles = false;
     private String language = "English";

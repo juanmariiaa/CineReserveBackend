@@ -14,7 +14,6 @@ public class ScreeningBasicDTO {
     private Integer roomNumber;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private Double ticketPrice;
     private Boolean is3D;
     private Boolean hasSubtitles;
     private String language;
@@ -36,7 +35,6 @@ public class ScreeningBasicDTO {
         }
         dto.setStartTime(screening.getStartTime());
         dto.setEndTime(screening.getEndTime());
-        dto.setTicketPrice(screening.getTicketPrice());
         dto.setIs3D(screening.getIs3D());
         dto.setHasSubtitles(screening.getHasSubtitles());
         dto.setLanguage(screening.getLanguage());
