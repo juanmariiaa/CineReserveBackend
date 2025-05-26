@@ -61,6 +61,9 @@ public class StripeWebhookController {
                         paymentService.updatePaymentIntentId(sessionId, paymentIntentId);
                     }
                     
+                    // We handle ticket generation and email sending in this event only
+                    // to avoid duplicate emails (since both checkout.session.completed and
+                    // payment_intent.succeeded events are triggered for successful payments)
                     paymentService.handleSessionCompleted(sessionId);
                     break;
                     
@@ -69,6 +72,8 @@ public class StripeWebhookController {
                     JSONObject paymentIntent = eventData.getJSONObject("object");
                     String paymentIntentId = paymentIntent.getString("id");
                     log.info("Payment succeeded: {}", paymentIntentId);
+                    // Note: Ticket generation and email sending is intentionally omitted here
+                    // to avoid duplicate emails, as it's already handled in checkout.session.completed
                     paymentService.handlePaymentSucceeded(paymentIntentId);
                     break;
                     

@@ -99,9 +99,11 @@ public class PaymentService {
         reservationRepository.save(reservation);
         
         // Generar y enviar el ticket
+        // IMPORTANT: Email sending is only done in this method (handleSessionCompleted) 
+        // and not in handlePaymentSucceeded to avoid duplicate emails.
+        // This is because Stripe triggers both events for successful payments.
         try {
             ticketService.generateAndSendTicket(reservation.getId());
-            log.info("Ticket generado y enviado para la reserva: {}", reservation.getId());
         } catch (Exception e) {
             log.error("Error al generar y enviar ticket para la reserva {}: {}", reservation.getId(), e.getMessage(), e);
         }
@@ -122,16 +124,18 @@ public class PaymentService {
             paymentRepository.save(payment);
 
             Reservation reservation = payment.getReservation();
-            reservation.setStatus(ReservationStatus.CONFIRMED);
-            reservationRepository.save(reservation);
             
-            // Generar y enviar el ticket
-            try {
-                ticketService.generateAndSendTicket(reservation.getId());
-                log.info("Ticket generado y enviado para la reserva: {}", reservation.getId());
-            } catch (Exception e) {
-                log.error("Error al generar y enviar ticket para la reserva {}: {}", reservation.getId(), e.getMessage(), e);
+            // Check if the reservation is already confirmed, if not, confirm it
+            if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+                reservation.setStatus(ReservationStatus.CONFIRMED);
+                reservationRepository.save(reservation);
+                log.info("Reservation status updated to CONFIRMED for reservation ID: {}", reservation.getId());
+            } else {
+                log.info("Reservation already confirmed, skipping status update for ID: {}", reservation.getId());
             }
+            
+            // Removed ticket generation and email sending from here to avoid duplication
+            // The ticket will be sent only from handleSessionCompleted
         } catch (Exception e) {
             log.error("Error processing payment success for intent {}: {}", paymentIntentId, e.getMessage());
         }
