@@ -31,6 +31,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
     private final StripeConfig stripeConfig;
+    private final TicketService ticketService;
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     @Value("${stripe.seat.price}")
@@ -96,6 +97,14 @@ public class PaymentService {
         Reservation reservation = payment.getReservation();
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservationRepository.save(reservation);
+        
+        // Generar y enviar el ticket
+        try {
+            ticketService.generateAndSendTicket(reservation.getId());
+            log.info("Ticket generado y enviado para la reserva: {}", reservation.getId());
+        } catch (Exception e) {
+            log.error("Error al generar y enviar ticket para la reserva {}: {}", reservation.getId(), e.getMessage(), e);
+        }
     }
 
     public void handlePaymentSucceeded(String paymentIntentId) {
@@ -115,6 +124,14 @@ public class PaymentService {
             Reservation reservation = payment.getReservation();
             reservation.setStatus(ReservationStatus.CONFIRMED);
             reservationRepository.save(reservation);
+            
+            // Generar y enviar el ticket
+            try {
+                ticketService.generateAndSendTicket(reservation.getId());
+                log.info("Ticket generado y enviado para la reserva: {}", reservation.getId());
+            } catch (Exception e) {
+                log.error("Error al generar y enviar ticket para la reserva {}: {}", reservation.getId(), e.getMessage(), e);
+            }
         } catch (Exception e) {
             log.error("Error processing payment success for intent {}: {}", paymentIntentId, e.getMessage());
         }

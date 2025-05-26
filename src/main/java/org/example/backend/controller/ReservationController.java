@@ -8,6 +8,8 @@ import org.example.backend.dto.ReservationCreateDTO;
 import org.example.backend.dto.SeatModificationDTO;
 import org.example.backend.model.Reservation;
 import org.example.backend.service.ReservationService;
+import org.example.backend.payload.response.MessageResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -85,5 +88,23 @@ public class ReservationController {
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/by-session/{sessionId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getReservationBySessionId(@PathVariable String sessionId) {
+        try {
+            Optional<Reservation> reservationOpt = reservationService.getReservationBySessionId(sessionId);
+            
+            if (reservationOpt.isPresent()) {
+                return ResponseEntity.ok(reservationOpt.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new MessageResponse("Reservation not found for session ID: " + sessionId));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error retrieving reservation: " + e.getMessage()));
+        }
     }
 }

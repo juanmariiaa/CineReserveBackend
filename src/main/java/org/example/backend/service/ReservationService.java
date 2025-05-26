@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +29,7 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final SeatReservationRepository seatReservationRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
     public Reservation createReservation(ReservationCreateDTO dto) {
         // Get the authenticated user if userId is not provided
@@ -157,5 +159,19 @@ public class ReservationService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
 
         return reservationRepository.findByUserId(user.getId());
+    }
+
+    /**
+     * Obtiene una reserva por el ID de sesión de Stripe
+     *
+     * @param sessionId ID de sesión de Stripe
+     * @return Reserva encontrada (Optional)
+     */
+    public Optional<Reservation> getReservationBySessionId(String sessionId) {
+        // Primero buscamos el pago asociado con el ID de sesión
+        Optional<Payment> payment = paymentRepository.findByStripeCheckoutId(sessionId);
+        
+        // Si encontramos el pago, devolvemos la reserva asociada
+        return payment.map(Payment::getReservation);
     }
 }
