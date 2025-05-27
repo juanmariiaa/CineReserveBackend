@@ -1,33 +1,17 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: cinemadb
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d cinemadb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  app:
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinereserve-api
+    restart: always
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/cinemadb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_PROFILES_ACTIVE=prod
+      # Variables de entorno que se utilizan en application.properties
       - TMDB_API_KEY=${TMDB_API_KEY}
       - STRIPE_API_KEY=${STRIPE_API_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
@@ -36,7 +20,37 @@ services:
       - EMAIL_USERNAME=${EMAIL_USERNAME}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - BASE_URL=${BASE_URL}
+      # Lo más importante: ajustar la URL de la base de datos para que funcione con Docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cinemadb
+      # Estas no son necesarias si ya están en application.properties y no cambias los valores
+      # - SPRING_DATASOURCE_USERNAME=root
+      # - SPRING_DATASOURCE_PASSWORD=root
+    volumes:
+      - cinereserve-logs:/app/logs
+    depends_on:
+      - db
+    networks:
+      - cinereserve-network
+
+  db:
+    image: postgres:16-alpine  # Versión más actual y ligera
+    container_name: cinereserve-db
+    restart: always
+    environment:
+      - POSTGRES_DB=cinemadb
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5432:5432"  # Mapeo del puerto (puedes cambiar el puerto externo si es necesario)
+    volumes:
+      - postgres-data:/var/lib/postgresql/data  # Almacenamiento persistente
+    networks:
+      - cinereserve-network
 
 volumes:
+  cinereserve-logs:
   postgres-data:
+
+networks:
+  cinereserve-network:
+    driver: bridge
