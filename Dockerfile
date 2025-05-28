@@ -1,28 +1,33 @@
-# Usamos la imagen oficial más reciente de Eclipse Temurin (antes OpenJDK)
-FROM eclipse-temurin:21-jdk-jammy AS build
+# Use the official Eclipse Temurin JDK image with Maven pre-installed
+FROM maven:3.9-eclipse-temurin-21 AS build
 
-# Directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos de proyecto (suponiendo que usas Maven)
-COPY mvnw .
-COPY .mvn .mvn
+# Copy pom.xml first for better layer caching
 COPY pom.xml .
-COPY src src
 
-# Construye el proyecto y omite los tests
-RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
+# Download dependencies
+RUN mvn dependency:go-offline -B
 
-# Segunda etapa: imagen runtime más ligera
+# Copy source code
+COPY src ./src
+
+# Build the application
+RUN mvn package -DskipTests
+
+# Use a slim JRE runtime as the final base image
 FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-# Copia el JAR construido desde la etapa anterior
+# Copy the built JAR file from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Exponer el puerto
+# Copy the .env file to the classpath
+COPY .env .env
+
+# Expose the port your app runs on
 EXPOSE 8080
 
-# Ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

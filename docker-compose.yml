@@ -1,56 +1,43 @@
 version: '3.9'
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: cinereserve-api
-    restart: always
+  app:
+    build: .
+    container_name: cinema-backend
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      # Variables de entorno que se utilizan en application.properties
-      - TMDB_API_KEY=${TMDB_API_KEY}
-      - STRIPE_API_KEY=${STRIPE_API_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - STRIPE_PRODUCT_ID=${STRIPE_PRODUCT_ID}
-      - STRIPE_PRICE_ID=${STRIPE_PRICE_ID}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      # Lo más importante: ajustar la URL de la base de datos para que funcione con Docker
+      # Database Configuration
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cinemadb
-      # Estas no son necesarias si ya están en application.properties y no cambias los valores
-      # - SPRING_DATASOURCE_USERNAME=root
-      # - SPRING_DATASOURCE_PASSWORD=root
-    volumes:
-      - cinereserve-logs:/app/logs
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+
+      # External APIs
+      - TMDB_API_KEY=your_tmdb_api_key
+      - GOOGLE_CLIENT_ID=your_google_client_id
+      - STRIPE_API_KEY=your_stripe_api_key
+      - STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+      - STRIPE_PRODUCT_ID=your_stripe_product_id
+      - STRIPE_PRICE_ID=your_stripe_price_id
+      - EMAIL_USERNAME=your_email@gmail.com
+      - EMAIL_PASSWORD=your_email_password
+
     depends_on:
       - db
-    networks:
-      - cinereserve-network
+    restart: always
 
   db:
-    image: postgres:16-alpine  # Versión más actual y ligera
-    container_name: cinereserve-db
-    restart: always
+    image: postgres:15-alpine
+    container_name: cinema-db-postgres
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=cinemadb
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-    ports:
-      - "5432:5432"  # Mapeo del puerto (puedes cambiar el puerto externo si es necesario)
     volumes:
-      - postgres-data:/var/lib/postgresql/data  # Almacenamiento persistente
-    networks:
-      - cinereserve-network
+      - postgres-cinema-data:/var/lib/postgresql/data
+    restart: always
 
 volumes:
-  cinereserve-logs:
-  postgres-data:
-
-networks:
-  cinereserve-network:
-    driver: bridge
+  postgres-cinema-data:
