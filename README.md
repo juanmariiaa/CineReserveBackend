@@ -135,9 +135,6 @@ MAIL_PORT=587
 MAIL_USERNAME=your_email@domain.com
 MAIL_PASSWORD=your_password
 MAIL_SENDER=CineReserve <noreply@cinereserve.com>
-
-# Base URL for redirects and QR generation
-BASE_URL=http://localhost:4200
 ```
 
 ### 3. Configure Database
