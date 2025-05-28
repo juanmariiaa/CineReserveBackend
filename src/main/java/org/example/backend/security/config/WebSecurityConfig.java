@@ -23,6 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -96,11 +97,22 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://checkout.stripe.com")); // Frontend URL and Stripe
+        configuration.setAllowedOrigins(Collections.singletonList("*")); // Allow all origins
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token", "Stripe-Signature"));
-        configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
-        configuration.setAllowCredentials(true); // Allow credentials
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Auth-Token",
+                "Origin",
+                "Accept",
+                "X-Requested-With",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "Stripe-Signature"));
+        configuration.setExposedHeaders(Arrays.asList("X-Auth-Token", "Authorization"));
+        configuration.setAllowCredentials(false); // Must be false when allowedOrigins has "*"
+        configuration.setMaxAge(3600L); // 1 hour
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

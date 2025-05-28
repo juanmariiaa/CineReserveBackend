@@ -13,7 +13,10 @@ import org.example.backend.repository.UserRepository;
 import org.example.backend.security.jwt.JwtUtils;
 import org.example.backend.security.service.GoogleAuthService;
 import org.example.backend.security.service.UserDetailsImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,10 +31,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -46,51 +51,77 @@ public class AuthController {
 
     @Autowired
     JwtUtils jwtUtils;
-    
+
     @Autowired
     GoogleAuthService googleAuthService;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles));
-    }
-    
-    @PostMapping("/google")
-    public ResponseEntity<?> authenticateWithGoogle(@Valid @RequestBody GoogleTokenRequest tokenRequest) {
         try {
-            String jwt = googleAuthService.authenticateGoogleToken(tokenRequest.getToken());
-            
-            // Get the authenticated user details
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
+
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(item -> item.getAuthority())
                     .collect(Collectors.toList());
-            
+
             return ResponseEntity.ok(new JwtResponse(jwt,
                     userDetails.getId(),
                     userDetails.getUsername(),
                     userDetails.getEmail(),
                     roles));
         } catch (Exception e) {
+            logger.error("Error during authentication", e);
             return ResponseEntity
-                    .badRequest()
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody GoogleTokenRequest tokenRequest) {
+        logger.info("Received Google authentication request");
+
+        // Validate request
+        if (tokenRequest == null || tokenRequest.getToken() == null || tokenRequest.getToken().isEmpty()) {
+            logger.error("Invalid request: token is missing or empty");
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Error: Token is missing or empty"));
+        }
+
+        try {
+            logger.info("Processing Google token");
+            String jwt = googleAuthService.authenticateGoogleToken(tokenRequest.getToken());
+
+            // Get the authenticated user details
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                logger.error("Authentication is null after token processing");
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new MessageResponse("Error: Authentication failed"));
+            }
+
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+
+            logger.info("Google authentication successful for user: {}", userDetails.getUsername());
+            return ResponseEntity.ok(new JwtResponse(jwt,
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    roles));
+        } catch (Exception e) {
+            logger.error("Google authentication error: {}", e.getMessage(), e);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
                     .body(new MessageResponse("Error: " + e.getMessage()));
         }
     }
